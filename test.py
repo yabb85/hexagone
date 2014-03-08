@@ -66,6 +66,7 @@ def initialize_hexagone(initial_pos, color, outline_thick, outline_color,
                         radius, rotate):
     """docstring for initialize_hexagone"""
     hexa = Hexagone()
+    hexa.fill_color = color
     hexa.position = initial_pos
     hexa.outline_thickness = outline_thick
     hexa.outline_color = outline_color
@@ -99,16 +100,28 @@ def main():
 
     hexa = initialize_hexagone((100, 100), sf.Color.WHITE, 1, sf.Color.BLACK,
                                60, 30)
-    initialize_board(hexa, window)
+    survol = initialize_hexagone((100, 100), sf.Color.CYAN, 1, sf.Color.BLACK,
+                                 60, 30)
+    survol_on = False
 
     # On démarre la boucle de jeu
     while window.is_open:
+        initialize_board(hexa, window)
         for event in window.events:
             if type(event) is sf.CloseEvent:
                 window.close()
             if type(event) is sf.KeyEvent and event.pressed and \
                event.code is sf.Keyboard.ESCAPE:
                 window.close()
+            if type(event) is sf.window.MouseMoveEvent:
+                survol.position = event.position
+                survol_on = True
+            if type(event) is sf.window.FocusEvent:
+                print "plop"
+                survol_on = False
+
+        if survol_on == True:
+            window.draw(survol)
         window.display()
 
 main()
