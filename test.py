@@ -4,7 +4,8 @@
 import math
 import sfml as sf
 
-# On crée la fenêtre principale
+
+MARGIN = 70
 
 
 class Node():
@@ -12,6 +13,18 @@ class Node():
         """docstring for __init__"""
         self.color = color
         self.position = pos
+
+    def get_position(self):
+        """docstring for get_position"""
+        return self.position
+
+    def get_color(self):
+        """docstring for get_color"""
+        return self.color
+
+    def set_color(self, color):
+        """docstring for set_color"""
+        self.color = color
 
 
 class Hexagone(sf.ConvexShape):
@@ -100,17 +113,64 @@ def initialize_board(hexa, window):
 def display_graph(hexa, window, graph):
     """docstring for display_graph"""
     window.clear(sf.Color(50, 200, 50))
-    for e in graph:
-        y = 70 + e[1] * hexa.get_apothem() * 2 + -e[0] * hexa.get_apothem()
-        x = 70 + e[0] * hexa.get_radius() * 1.5
+    for node in graph:
+        pos = node.get_position()
+        y = MARGIN + pos[1] * hexa.get_apothem() * 2 - \
+            pos[0] * hexa.get_apothem()
+        x = MARGIN + pos[0] * hexa.get_radius() * 1.5
         hexa.position = (x, y)
+        hexa.fill_color = node.get_color()
         window.draw(hexa)
 
 
-test = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 1), (1, 2), (1, 3), (1, 4),
-        (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 2), (3, 3), (3, 4), (3, 5),
-        (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (5, 3), (5, 4), (5, 5), (5, 6),
-        (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (7, 4), (7, 5), (7, 6), (7, 7)]
+def searchNodeByCoordInList(list_node, coord):
+    """docstring for searchNodeByCoordInList"""
+    for node in list_node:
+        if node.get_position() == coord:
+            return node
+    return None
+
+
+test = [Node((0, 0)), Node((0, 1)), Node((0, 2)), Node((0, 3)), Node((0, 4)),
+        Node((1, 1)), Node((1, 2)), Node((1, 3)), Node((1, 4)),
+        Node((2, 1)), Node((2, 2)), Node((2, 3)), Node((2, 4)), Node((2, 5)),
+        Node((3, 2)), Node((3, 3)), Node((3, 4)), Node((3, 5)),
+        Node((4, 2)), Node((4, 3)), Node((4, 4)), Node((4, 5)), Node((4, 6)),
+        Node((5, 3)), Node((5, 4)), Node((5, 5)), Node((5, 6)),
+        Node((6, 3)), Node((6, 4)), Node((6, 5)), Node((6, 6)), Node((6, 7)),
+        Node((7, 4)), Node((7, 5)), Node((7, 6)), Node((7, 7))]
+
+
+def searchNodeInMap(event, hexa):
+    """docstring for searchNode"""
+    pass
+    pos = (-1, -1)
+    old_dist = (-1, -1)
+    coord = (-1, -1)
+    for i in range(8):
+        y = MARGIN + i * hexa.get_apothem() * 2 - \
+            i * hexa.get_apothem()
+        x = MARGIN + i * hexa.get_radius() * 1.5
+        dist = (math.fabs(event.position.x - x),
+                math.fabs(event.position.y - y))
+        if pos == (-1, -1) or dist < old_dist:
+            coord = (i, i)
+            pos = (x, y)
+            old_dist = dist
+    if event.position.y > pos[1]:
+        liste = range(coord[0], 15)
+    else:
+        liste = range(0, coord[0])
+    for i in liste:
+        y = (MARGIN + i * hexa.get_apothem() * 2 - coord[0] *
+             hexa.get_apothem())
+        dist = (math.fabs(event.position.x - pos[0]),
+                math.fabs(event.position.y - y))
+        if dist < old_dist:
+            coord = (coord[0], i)
+            pos = (pos[0], y)
+            old_dist = dist
+    return pos, coord
 
 
 def main():
@@ -126,6 +186,7 @@ def main():
     survol = initialize_hexagone((100, 100), sf.Color.CYAN, 1, sf.Color.BLACK,
                                  60, 30)
     survol_on = False
+    last_node = None
 
     # On démarre la boucle de jeu
     while window.is_open:
@@ -137,39 +198,18 @@ def main():
                event.code is sf.Keyboard.ESCAPE:
                 window.close()
             if type(event) is sf.window.MouseMoveEvent:
-                pos = (-1, -1)
-                old_dist = (-1, -1)
-                element = (-1, -1)
-                for i in range(8):
-                    y = (70 + i * hexa.get_apothem() * 2 + -i *
-                         hexa.get_apothem())
-                    x = 70 + i * hexa.get_radius() * 1.5
-                    dist = (math.fabs(event.position.x - x),
-                            math.fabs(event.position.y - y))
-                    if pos == (-1, -1) or dist < old_dist:
-                        element = (i, i)
-                        pos = (x, y)
-                        old_dist = dist
-                if event.position.y > pos[1]:
-                    liste = range(element[0], 15)
-                else:
-                    liste = range(0, element[0])
-                for i in liste:
-                    y = (70 + i * hexa.get_apothem() * 2 + -element[0] *
-                         hexa.get_apothem())
-                    dist = (math.fabs(event.position.x - pos[0]),
-                            math.fabs(event.position.y - y))
-                    if dist < old_dist:
-                        element = (element[0], i)
-                        pos = (pos[0], y)
-                        old_dist = dist
+                pos, coord = searchNodeInMap(event, hexa)
                 survol.position = pos
-                if element in test:
+                node = searchNodeByCoordInList(test, coord)
+                if node is not None:
+                    last_node = node
                     survol_on = True
                 else:
                     survol_on = False
             if type(event) is sf.window.FocusEvent:
                 survol_on = False
+            if type(event) is sf.window.MouseButtonEvent:
+                last_node.color = sf.Color.BLUE
 
         if survol_on is True:
             window.draw(survol)
