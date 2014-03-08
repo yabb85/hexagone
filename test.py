@@ -5,11 +5,6 @@ import math
 import sfml as sf
 
 # On crée la fenêtre principale
-game_size = sf.Vector2(800, 600)
-w, h = game_size
-settings = sf.window.ContextSettings()
-settings.antialiasing_level = 8
-window = sf.RenderWindow(sf.VideoMode(w, h), "PySFML test")
 
 
 class Hexagone(sf.ConvexShape):
@@ -67,28 +62,20 @@ class Hexagone(sf.ConvexShape):
         return self.radius * math.sqrt(3) / 2
 
 
-hexa = Hexagone()
+def initialize_hexagone(initial_pos, color, outline_thick, outline_color,
+                        radius, rotate):
+    """docstring for initialize_hexagone"""
+    hexa = Hexagone()
+    hexa.position = initial_pos
+    hexa.outline_thickness = outline_thick
+    hexa.outline_color = outline_color
+    hexa.set_radius(radius)
+    hexa.rotate(rotate)
+    return hexa
 
-hexa.position = (100, 100)
-hexa.outline_thickness = 1
-hexa.outline_color = sf.Color.BLACK
-hexa.set_radius(60)
-nb_col = game_size.x / (hexa.get_radius() * 2)
-nb_row = game_size.y / (hexa.get_apothem() * 2)
-hexa.rotate(30)
 
-
-# On démarre la boucle de jeu
-while window.is_open:
-    for event in window.events:
-        if type(event) is sf.CloseEvent:
-            window.close()
-        if type(event) is sf.KeyEvent and event.pressed and \
-           event.code is sf.Keyboard.ESCAPE:
-            window.close()
-
+def initialize_board(hexa, window):
     hexa.position = (hexa.get_radius(), hexa.get_apothem())
-    last_position = hexa.position
     window.clear(sf.Color(50, 200, 50))
     for j in range(0, 5):
         for i in range(0, 8):
@@ -101,4 +88,27 @@ while window.is_open:
         hexa.position = (hexa.get_radius(),
                          hexa.position.y + 2 * hexa.get_apothem())
 
-    window.display()
+
+def main():
+    """docstring for main"""
+    game_size = sf.Vector2(800, 600)
+    w, h = game_size
+    settings = sf.window.ContextSettings()
+    settings.antialiasing_level = 8
+    window = sf.RenderWindow(sf.VideoMode(w, h), "PySFML test")
+
+    hexa = initialize_hexagone((100, 100), sf.Color.WHITE, 1, sf.Color.BLACK,
+                               60, 30)
+    initialize_board(hexa, window)
+
+    # On démarre la boucle de jeu
+    while window.is_open:
+        for event in window.events:
+            if type(event) is sf.CloseEvent:
+                window.close()
+            if type(event) is sf.KeyEvent and event.pressed and \
+               event.code is sf.Keyboard.ESCAPE:
+                window.close()
+        window.display()
+
+main()
