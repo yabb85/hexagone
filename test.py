@@ -7,6 +7,13 @@ import sfml as sf
 # On crée la fenêtre principale
 
 
+class Node():
+    def __init__(self, pos=(0, 0), color=sf.Color.WHITE):
+        """docstring for __init__"""
+        self.color = color
+        self.position = pos
+
+
 class Hexagone(sf.ConvexShape):
     def __init__(self):
         """docstring for __init__"""
@@ -90,6 +97,22 @@ def initialize_board(hexa, window):
                          hexa.position.y + 2 * hexa.get_apothem())
 
 
+def display_graph(hexa, window, graph):
+    """docstring for display_graph"""
+    window.clear(sf.Color(50, 200, 50))
+    for e in graph:
+        y = 70 + e[1] * hexa.get_apothem() * 2 + -e[0] * hexa.get_apothem()
+        x = 70 + e[0] * hexa.get_radius() * 1.5
+        hexa.position = (x, y)
+        window.draw(hexa)
+
+
+test = [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, 1), (1, 2), (1, 3), (1, 4),
+        (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (3, 2), (3, 3), (3, 4), (3, 5),
+        (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (5, 3), (5, 4), (5, 5), (5, 6),
+        (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (7, 4), (7, 5), (7, 6), (7, 7)]
+
+
 def main():
     """docstring for main"""
     game_size = sf.Vector2(800, 600)
@@ -106,7 +129,7 @@ def main():
 
     # On démarre la boucle de jeu
     while window.is_open:
-        initialize_board(hexa, window)
+        display_graph(hexa, window, test)
         for event in window.events:
             if type(event) is sf.CloseEvent:
                 window.close()
@@ -114,13 +137,41 @@ def main():
                event.code is sf.Keyboard.ESCAPE:
                 window.close()
             if type(event) is sf.window.MouseMoveEvent:
-                survol.position = event.position
-                survol_on = True
+                pos = (-1, -1)
+                old_dist = (-1, -1)
+                element = (-1, -1)
+                for i in range(8):
+                    y = (70 + i * hexa.get_apothem() * 2 + -i *
+                         hexa.get_apothem())
+                    x = 70 + i * hexa.get_radius() * 1.5
+                    dist = (math.fabs(event.position.x - x),
+                            math.fabs(event.position.y - y))
+                    if pos == (-1, -1) or dist < old_dist:
+                        element = (i, i)
+                        pos = (x, y)
+                        old_dist = dist
+                if event.position.y > pos[1]:
+                    liste = range(element[0], 15)
+                else:
+                    liste = range(0, element[0])
+                for i in liste:
+                    y = (70 + i * hexa.get_apothem() * 2 + -element[0] *
+                         hexa.get_apothem())
+                    dist = (math.fabs(event.position.x - pos[0]),
+                            math.fabs(event.position.y - y))
+                    if dist < old_dist:
+                        element = (element[0], i)
+                        pos = (pos[0], y)
+                        old_dist = dist
+                survol.position = pos
+                if element in test:
+                    survol_on = True
+                else:
+                    survol_on = False
             if type(event) is sf.window.FocusEvent:
-                print "plop"
                 survol_on = False
 
-        if survol_on == True:
+        if survol_on is True:
             window.draw(survol)
         window.display()
 
