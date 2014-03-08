@@ -67,17 +67,15 @@ class Hexagone(sf.ConvexShape):
         return self.radius * math.sqrt(3) / 2
 
 
-hexs = Hexagone()
+hexa = Hexagone()
 
-hexs.position = (100, 100)
-hexs.outline_thickness = 1
-hexs.outline_color = sf.Color.BLACK
-hexs.set_radius(60)
-nb_col = game_size.x / (hexs.get_radius() * 2)
-nb_row = game_size.y / (hexs.get_apothem() * 2)
-#hexs.rotate(30)
-hexs.rotate(15)
-#hexs.ratio = (1, 0.5)
+hexa.position = (100, 100)
+hexa.outline_thickness = 1
+hexa.outline_color = sf.Color.BLACK
+hexa.set_radius(60)
+nb_col = game_size.x / (hexa.get_radius() * 2)
+nb_row = game_size.y / (hexa.get_apothem() * 2)
+hexa.rotate(30)
 
 
 # On démarre la boucle de jeu
@@ -89,28 +87,18 @@ while window.is_open:
            event.code is sf.Keyboard.ESCAPE:
             window.close()
 
-    hexs.position = (hexs.get_radius(), hexs.get_apothem())
-    last_position = hexs.position
+    hexa.position = (hexa.get_radius(), hexa.get_apothem())
+    last_position = hexa.position
     window.clear(sf.Color(50, 200, 50))
-    for j in range(0, 6):
-        #hexs.position = (hexs.get_radius(), hexs.position.y)
+    for j in range(0, 5):
         for i in range(0, 8):
-            window.draw(hexs)
-            radius = hexs.get_radius()
+            window.draw(hexa)
+            radius = hexa.get_radius()
             if i % 2 == 0:
-                hexs.move((math.sin(math.radians(75)) * radius +
-                           math.sin(math.radians(45)) * radius,
-                           (math.sin(math.radians(45)) * radius) -
-                           (math.sin(math.radians(15)) * radius)))
+                hexa.move((radius * 1.5, hexa.get_apothem()))
             else:
-                hexs.move((math.sin(math.radians(75)) * radius +
-                           math.sin(math.radians(15)) * radius,
-                           - (math.sin(math.radians(75)) * radius) -
-                           (math.sin(math.radians(15)) * radius)))
-        hexs.position = last_position
-        hexs.move((math.sin(math.radians(45)) * radius -
-                   math.sin(math.radians(15)) * radius,
-                   math.sin(math.radians(75)) * radius +
-                   math.sin(math.radians(45)) * radius))
-        last_position = hexs.position
+                hexa.move((radius * 1.5, -hexa.get_apothem()))
+        hexa.position = (hexa.get_radius(),
+                         hexa.position.y + 2 * hexa.get_apothem())
+
     window.display()
