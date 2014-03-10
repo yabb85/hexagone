@@ -6,6 +6,18 @@ import sfml as sf
 
 
 MARGIN = 70
+GRAY_127 = sf.Color(127, 127, 127)
+EAU = sf.Color(150, 196, 217)
+RED = sf.Color(232, 174, 173)
+GREEN = sf.Color(188, 222, 186)
+BORDER = sf.Color(127, 127, 127, 127)
+OVERLOAD = sf.Color(127, 127, 127, 100)
+
+T_BOIS = None
+T_EAU = None
+T_MONTAGNE = None
+T_ARBRE = None
+T_VIDE = None
 
 
 class Node():
@@ -13,6 +25,7 @@ class Node():
         """docstring for __init__"""
         self.color = color
         self.position = pos
+        self.texture = sf.Texture.from_file('data/paper.jpg')
 
     def get_position(self):
         """docstring for get_position"""
@@ -26,51 +39,55 @@ class Node():
         """docstring for set_color"""
         self.color = color
 
+    def set_texture(self, texture):
+        """docstring for set_texture"""
+        self.texture = texture
+
 
 class Hexagone(sf.ConvexShape):
     def __init__(self):
         """docstring for __init__"""
         self.point_count = 6
         self.radius = 100
-        x = self.radius * math.sqrt(3) / 2
-        y = self.radius / 2
+        x = -self.radius / 2
+        y = self.radius * math.sqrt(3) / 2
         self.set_point(0, sf.Vector2(x, y))
-        x = 0
-        y = self.radius
+        x = self.radius / 2
+        y = self.radius * math.sqrt(3) / 2
         self.set_point(1, sf.Vector2(x, y))
-        x = -self.radius * math.sqrt(3) / 2
-        y = self.radius / 2
+        x = self.radius
+        y = 0
         self.set_point(2, sf.Vector2(x, y))
-        x = -self.radius * math.sqrt(3) / 2
-        y = -self.radius / 2
+        x = self.radius / 2
+        y = -self.radius * math.sqrt(3) / 2
         self.set_point(3, sf.Vector2(x, y))
-        x = 0
-        y = -self.radius
+        x = -self.radius / 2
+        y = -self.radius * math.sqrt(3) / 2
         self.set_point(4, sf.Vector2(x, y))
-        x = self.radius * math.sqrt(3) / 2
-        y = -self.radius / 2
+        x = -self.radius
+        y = 0
         self.set_point(5, sf.Vector2(x, y))
 
     def set_radius(self, radius):
         """docstring for set_radius"""
         self.radius = radius
-        x = self.radius * math.sqrt(3) / 2
-        y = self.radius / 2
+        x = -self.radius / 2
+        y = self.radius * math.sqrt(3) / 2
         self.set_point(0, sf.Vector2(x, y))
-        x = 0
-        y = self.radius
+        x = self.radius / 2
+        y = self.radius * math.sqrt(3) / 2
         self.set_point(1, sf.Vector2(x, y))
-        x = -self.radius * math.sqrt(3) / 2
-        y = self.radius / 2
+        x = self.radius
+        y = 0
         self.set_point(2, sf.Vector2(x, y))
-        x = -self.radius * math.sqrt(3) / 2
-        y = -self.radius / 2
+        x = self.radius / 2
+        y = -self.radius * math.sqrt(3) / 2
         self.set_point(3, sf.Vector2(x, y))
-        x = 0
-        y = -self.radius
+        x = -self.radius / 2
+        y = -self.radius * math.sqrt(3) / 2
         self.set_point(4, sf.Vector2(x, y))
-        x = self.radius * math.sqrt(3) / 2
-        y = -self.radius / 2
+        x = -self.radius
+        y = 0
         self.set_point(5, sf.Vector2(x, y))
 
     def get_radius(self):
@@ -81,9 +98,13 @@ class Hexagone(sf.ConvexShape):
         """docstring for get_apothem"""
         return self.radius * math.sqrt(3) / 2
 
+    def set_texture(self, texture):
+        """docstring for set_texture"""
+        self.texture = texture
+
 
 def initialize_hexagone(initial_pos, color, outline_thick, outline_color,
-                        radius, rotate):
+                        radius, rotate=0):
     """docstring for initialize_hexagone"""
     hexa = Hexagone()
     hexa.fill_color = color
@@ -110,9 +131,26 @@ def initialize_board(hexa, window):
                          hexa.position.y + 2 * hexa.get_apothem())
 
 
+def load_texture():
+    """docstring for load_texture"""
+    global T_ARBRE
+    global T_BOIS
+    global T_EAU
+    global T_MONTAGNE
+    global T_VIDE
+    T_ARBRE = sf.Texture.from_file('data/arbre.jpg')
+    T_BOIS = sf.Texture.from_file('data/bois.jpg')
+    T_EAU = sf.Texture.from_file('data/eau.jpg')
+    T_MONTAGNE = sf.Texture.from_file('data/montagne.jpg')
+    T_VIDE = sf.Texture.from_file('data/paper.jpg')
+
+
 def display_graph(hexa, window, graph):
     """docstring for display_graph"""
+    global T_BOIS
     window.clear(sf.Color(50, 200, 50))
+    sprite = sf.Sprite(T_BOIS)
+    window.draw(sprite)
     for node in graph:
         pos = node.get_position()
         y = MARGIN + pos[1] * hexa.get_apothem() * 2 - \
@@ -120,6 +158,7 @@ def display_graph(hexa, window, graph):
         x = MARGIN + pos[0] * hexa.get_radius() * 1.5
         hexa.position = (x, y)
         hexa.fill_color = node.get_color()
+        hexa.set_texture(node.texture)
         window.draw(hexa)
 
 
@@ -147,7 +186,7 @@ def searchNodeInMap(event, hexa):
     pos = (-1, -1)
     old_dist = (-1, -1)
     coord = (-1, -1)
-    for i in range(8):
+    for i in range(9):
         y = MARGIN + i * hexa.get_apothem() * 2 - \
             i * hexa.get_apothem()
         x = MARGIN + i * hexa.get_radius() * 1.5
@@ -175,18 +214,24 @@ def searchNodeInMap(event, hexa):
 
 def main():
     """docstring for main"""
+    global T_ARBRE
+    global T_EAU
+    global T_MONTAGNE
+    global T_VIDE
     game_size = sf.Vector2(800, 600)
     w, h = game_size
     settings = sf.window.ContextSettings()
     settings.antialiasing_level = 8
-    window = sf.RenderWindow(sf.VideoMode(w, h), "PySFML test")
+    window = sf.RenderWindow(sf.VideoMode(w, h), "PySFML test",
+                             sf.window.Style.DEFAULT, settings)
 
-    hexa = initialize_hexagone((100, 100), sf.Color.WHITE, 1, sf.Color.BLACK,
-                               60, 30)
-    survol = initialize_hexagone((100, 100), sf.Color.CYAN, 1, sf.Color.BLACK,
-                                 60, 30)
+    hexa = initialize_hexagone((100, 100), GRAY_127, 1, BORDER, 60)
+    survol = initialize_hexagone((100, 100), OVERLOAD, 1, sf.Color.BLACK,
+                                 60)
     survol_on = False
     last_node = None
+    load_texture()
+    hexa.set_texture(T_VIDE)
 
     # On démarre la boucle de jeu
     while window.is_open:
@@ -194,6 +239,8 @@ def main():
         for event in window.events:
             if type(event) is sf.CloseEvent:
                 window.close()
+            if type(event) is sf.ResizeEvent:
+                window.view = sf.View(sf.Rectangle((0, 0), window.size))
             if type(event) is sf.KeyEvent and event.pressed and \
                event.code is sf.Keyboard.ESCAPE:
                 window.close()
@@ -205,11 +252,26 @@ def main():
                     last_node = node
                     survol_on = True
                 else:
+                    last_node = None
                     survol_on = False
             if type(event) is sf.window.FocusEvent:
                 survol_on = False
-            if type(event) is sf.window.MouseButtonEvent:
-                last_node.color = sf.Color.BLUE
+            if type(event) is sf.window.MouseButtonEvent and event.pressed:
+                if last_node is not None and \
+                   searchNodeByCoordInList(test, last_node.get_position()) \
+                   is not None:
+                    if last_node.get_color() == sf.Color.WHITE:
+                        last_node.set_color(EAU)
+                        last_node.set_texture(T_EAU)
+                    elif last_node.get_color() == EAU:
+                        last_node.set_color(RED)
+                        last_node.set_texture(T_MONTAGNE)
+                    elif last_node.get_color() == RED:
+                        last_node.set_color(GREEN)
+                        last_node.set_texture(T_ARBRE)
+                    else:
+                        last_node.set_texture(T_VIDE)
+                        last_node.set_color(sf.Color.WHITE)
 
         if survol_on is True:
             window.draw(survol)
