@@ -20,12 +20,34 @@ T_ARBRE = None
 T_VIDE = None
 
 
+class Ground:
+    plain = 0
+    forest = 1
+    mountain = 2
+    water = 3
+
+
+class TextureManager:
+    def laod_all_texture(self):
+        """docstring for laod_all_texture"""
+        pass
+
+    def convertGroundToTexture(self, ground):
+        """docstring for convertGroundToTexture"""
+        pass
+
+    def convertTextureToGround(self, texture):
+        """docstring for convertTextureToGround"""
+        pass
+
+
 class Node():
-    def __init__(self, pos=(0, 0), color=sf.Color.WHITE):
+    def __init__(self, pos=(0, 0), ground=Ground.plain, color=sf.Color.WHITE):
         """docstring for __init__"""
         self.color = color
         self.position = pos
         self.texture = sf.Texture.from_file('data/paper.jpg')
+        self.ground = ground
 
     def get_position(self):
         """docstring for get_position"""
@@ -147,10 +169,6 @@ def load_texture():
 
 def display_graph(hexa, window, graph):
     """docstring for display_graph"""
-    global T_BOIS
-    window.clear(sf.Color(50, 200, 50))
-    sprite = sf.Sprite(T_BOIS)
-    window.draw(sprite)
     for node in graph:
         pos = node.get_position()
         y = MARGIN + pos[1] * hexa.get_apothem() * 2 - \
@@ -214,6 +232,7 @@ def searchNodeInMap(event, hexa):
 
 def main():
     """docstring for main"""
+    global T_BOIS
     global T_ARBRE
     global T_EAU
     global T_MONTAGNE
@@ -226,15 +245,24 @@ def main():
                              sf.window.Style.DEFAULT, settings)
 
     hexa = initialize_hexagone((100, 100), GRAY_127, 1, BORDER, 60)
-    survol = initialize_hexagone((100, 100), OVERLOAD, 1, sf.Color.BLACK,
-                                 60)
+    survol = sf.CircleShape(60, 6)
+    survol
+    #survol = initialize_hexagone((100, 100), OVERLOAD, 1, sf.Color.BLACK,
+                                #60)
     survol_on = False
     last_node = None
     load_texture()
     hexa.set_texture(T_VIDE)
+    survol.rotate(30)
+    survol.texture = T_ARBRE
+    survol.outline_thickness = 1
+    survol.outline_color = sf.Color.BLACK
+    sprite = sf.Sprite(T_BOIS)
 
     # On démarre la boucle de jeu
     while window.is_open:
+        window.clear(sf.Color(50, 200, 50))
+        window.draw(sprite)
         display_graph(hexa, window, test)
         for event in window.events:
             if type(event) is sf.CloseEvent:
