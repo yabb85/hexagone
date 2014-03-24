@@ -60,10 +60,14 @@ def perlin(table, x, y, res):
     ii = x0 % 255
     jj = y0 % 255
 
-    grad1 = table[ii + table[jj]] % 8
-    grad2 = table[ii + 1 + table[jj]] % 8
-    grad3 = table[ii + table[jj + 1]] % 8
-    grad4 = table[ii + 1 + table[jj + 1]] % 8
+    index1 = (ii + table[jj]) % 256
+    index2 = (ii + 1 + table[jj]) % 256
+    index3 = (ii + table[jj + 1]) % 256
+    index4 = (ii + 1 + table[jj + 1]) % 256
+    grad1 = table[index1] % 8
+    grad2 = table[index2] % 8
+    grad3 = table[index3] % 8
+    grad4 = table[index4] % 8
 
     tempX = x - x0
     tempY = y - y0
@@ -98,10 +102,29 @@ table = generate_table(1)
 dictionary = check_table(table)
 
 
-width = 1000
-height = 1000
-img = Image.new('L', (width, height))
+width = 400
+height = 400
+harmonique = 6
+base = 5
+result = Image.new('L', (width, height))
+
+lst = []
+for i in range(0, width * height):
+    lst.append(0)
+
+for harm in range(0, harmonique):
+    freq = base * 2 ** harm
+    img = Image.new('L', (width, height))
+    for i in range(0, width):
+        for j in range(0, height):
+            value = (perlin(table, i, j, freq) + 1) * 0.5 * 255
+            lst[j + i * height] += value / math.sqrt(2 ** (harmonique - harm - 1))
+            img.putpixel((i, j), value)
+    #img.save('test' + str(freq) + '.pgm')
+
+
 for i in range(0, width):
     for j in range(0, height):
-        img.putpixel((i, j), (perlin(table, i, j, 100) + 1) * 0.5 * 255)
-img.save('test.pgm', 'PPM')
+        result.putpixel((i, j), lst[j + i * height] / harmonique)
+
+result.save('result.pgm')
