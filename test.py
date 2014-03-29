@@ -28,25 +28,65 @@ class Ground:
 
 
 class TextureManager:
-    def laod_all_texture(self):
-        """docstring for laod_all_texture"""
-        pass
+    class __TextureManager:
+        def __init__(self):
+            """docstring for __init__"""
+            self.textures = {
+                Ground.plain: None,
+                Ground.forest: None,
+                Ground.mountain: None,
+                Ground.water: None
+            }
+            self.background = None
+            self.load_all_texture()
 
-    def convertGroundToTexture(self, ground):
-        """docstring for convertGroundToTexture"""
-        pass
+        def load_all_texture(self):
+            """load all texture used in game"""
+            self.background = sf.Texture.from_file('data/bois.jpg')
+            self.textures[Ground.forest] = sf.Texture.from_file(
+                'data/arbre.jpg')
+            self.textures[Ground.water] = sf.Texture.from_file('data/eau.jpg')
+            self.textures[Ground.mountain] = sf.Texture.from_file(
+                'data/montagne.jpg')
+            self.textures[Ground.plain] = sf.Texture.from_file(
+                'data/paper.jpg')
 
-    def convertTextureToGround(self, texture):
-        """docstring for convertTextureToGround"""
-        pass
+        def convertGroundToTexture(self, ground):
+            """serach the texture associate to ground type"""
+            return self.textures[ground]
+
+        def convertTextureToGround(self, texture):
+            """docstring for convertTextureToGround"""
+            pass
+
+        def get_background(self):
+            """docstring for get_background"""
+            return self.background
+
+    __instance = None
+
+    def __init__(self):
+        """docstring for __init__"""
+        if TextureManager.__instance is None:
+            TextureManager.__instance = TextureManager.__TextureManager()
+
+    def __getattr__(self, name):
+        """docstring for __getattr__"""
+        return getattr(self.__instance, name)
+
+    def __setattr__(self, name):
+        """docstring for __setattr__"""
+        return setattr(self.__instance, name)
 
 
 class Node():
+    """
+    Représente un case sur le plateau
+    """
     def __init__(self, pos=(0, 0), ground=Ground.plain, color=sf.Color.WHITE):
         """docstring for __init__"""
         self.color = color
         self.position = pos
-        self.texture = sf.Texture.from_file('data/paper.jpg')
         self.ground = ground
 
     def get_position(self):
@@ -61,12 +101,19 @@ class Node():
         """docstring for set_color"""
         self.color = color
 
-    def set_texture(self, texture):
-        """docstring for set_texture"""
-        self.texture = texture
+    def get_ground(self):
+        """docstring for get_ground"""
+        return self.ground
+
+    def set_ground(self, ground):
+        """docstring for set_ground"""
+        self.ground = ground
 
 
 class Hexagone(sf.ConvexShape):
+    """
+    Forme géométrique à dessiner
+    """
     def __init__(self):
         """docstring for __init__"""
         self.point_count = 6
@@ -138,37 +185,14 @@ def initialize_hexagone(initial_pos, color, outline_thick, outline_color,
     return hexa
 
 
-def initialize_board(hexa, window):
-    hexa.position = (hexa.get_radius(), hexa.get_apothem())
-    window.clear(sf.Color(50, 200, 50))
-    for j in range(0, 5):
-        for i in range(0, 8):
-            window.draw(hexa)
-            radius = hexa.get_radius()
-            if i % 2 == 0:
-                hexa.move((radius * 1.5, hexa.get_apothem()))
-            else:
-                hexa.move((radius * 1.5, -hexa.get_apothem()))
-        hexa.position = (hexa.get_radius(),
-                         hexa.position.y + 2 * hexa.get_apothem())
-
-
-def load_texture():
-    """docstring for load_texture"""
-    global T_ARBRE
-    global T_BOIS
-    global T_EAU
-    global T_MONTAGNE
-    global T_VIDE
-    T_ARBRE = sf.Texture.from_file('data/arbre.jpg')
-    T_BOIS = sf.Texture.from_file('data/bois.jpg')
-    T_EAU = sf.Texture.from_file('data/eau.jpg')
-    T_MONTAGNE = sf.Texture.from_file('data/montagne.jpg')
-    T_VIDE = sf.Texture.from_file('data/paper.jpg')
-
-
 def display_graph(hexa, window, graph):
-    """docstring for display_graph"""
+    """
+    Display all elements contains in graph
+    :param hexa:the geometrical form used to display
+    :param window:window used to display
+    :param graph:list of all elements to displaying
+    """
+    texture_mgr = TextureManager()
     for node in graph:
         pos = node.get_position()
         y = MARGIN + pos[1] * hexa.get_apothem() * 2 - \
@@ -176,12 +200,14 @@ def display_graph(hexa, window, graph):
         x = MARGIN + pos[0] * hexa.get_radius() * 1.5
         hexa.position = (x, y)
         hexa.fill_color = node.get_color()
-        hexa.set_texture(node.texture)
+        hexa.set_texture(texture_mgr.convertGroundToTexture(node.get_ground()))
         window.draw(hexa)
 
 
 def searchNodeByCoordInList(list_node, coord):
-    """docstring for searchNodeByCoordInList"""
+    """
+    Search if a nade exist in list with the coordinate passed in arguments.
+    """
     for node in list_node:
         if node.get_position() == coord:
             return node
@@ -200,10 +226,10 @@ test = [Node((0, 0)), Node((0, 1)), Node((0, 2)), Node((0, 3)), Node((0, 4)),
 
 def searchNodeInMap(event, hexa):
     """docstring for searchNode"""
-    pass
     pos = (-1, -1)
     old_dist = (-1, -1)
     coord = (-1, -1)
+    """search element in diagonal"""
     for i in range(9):
         y = MARGIN + i * hexa.get_apothem() * 2 - \
             i * hexa.get_apothem()
@@ -232,10 +258,6 @@ def searchNodeInMap(event, hexa):
 
 def main():
     """docstring for main"""
-    global T_BOIS
-    global T_ARBRE
-    global T_EAU
-    global T_MONTAGNE
     global T_VIDE
     game_size = sf.Vector2(800, 600)
     w, h = game_size
@@ -245,19 +267,13 @@ def main():
                              sf.window.Style.DEFAULT, settings)
 
     hexa = initialize_hexagone((100, 100), GRAY_127, 1, BORDER, 60)
-    survol = sf.CircleShape(60, 6)
-    survol
-    #survol = initialize_hexagone((100, 100), OVERLOAD, 1, sf.Color.BLACK,
-                                #60)
+    survol = initialize_hexagone((100, 100), OVERLOAD, 1, sf.Color.BLACK,
+                                 60)
     survol_on = False
     last_node = None
-    load_texture()
-    hexa.set_texture(T_VIDE)
-    survol.rotate(30)
-    survol.texture = T_ARBRE
-    survol.outline_thickness = 1
-    survol.outline_color = sf.Color.BLACK
-    sprite = sf.Sprite(T_BOIS)
+    texture_mgr = TextureManager()
+    hexa.set_texture(texture_mgr.convertGroundToTexture(Ground.forest))
+    sprite = sf.Sprite(texture_mgr.get_background())
 
     # On démarre la boucle de jeu
     while window.is_open:
@@ -290,16 +306,16 @@ def main():
                    is not None:
                     if last_node.get_color() == sf.Color.WHITE:
                         last_node.set_color(EAU)
-                        last_node.set_texture(T_EAU)
+                        last_node.set_ground(Ground.water)
                     elif last_node.get_color() == EAU:
                         last_node.set_color(RED)
-                        last_node.set_texture(T_MONTAGNE)
+                        last_node.set_ground(Ground.mountain)
                     elif last_node.get_color() == RED:
                         last_node.set_color(GREEN)
-                        last_node.set_texture(T_ARBRE)
+                        last_node.set_ground(Ground.forest)
                     else:
-                        last_node.set_texture(T_VIDE)
                         last_node.set_color(sf.Color.WHITE)
+                        last_node.set_ground(Ground.plain)
 
         if survol_on is True:
             window.draw(survol)
