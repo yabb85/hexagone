@@ -98,33 +98,74 @@ def perlin(table, x, y, res):
     return Li1 + Cy * (Li2 - Li1)
 
 
+def heightmap(table, width, height, harmonique, base):
+    """docstring for heightmap"""
+    lst = []
+    factors = []
+    for i in range(0, width * height):
+        lst.append(0)
+
+    for harm in range(0, harmonique):
+        freq = base * 2 ** harm
+        img = Image.new('L', (width, height))
+        #factor = 2 ** (harmonique - harm - 1)
+        factor = 2 ** math.sqrt(harmonique - harm - 1)
+        factors.append(1.0 / factor)
+        for i in range(0, width):
+            for j in range(0, height):
+                value = (perlin(table, i, j, freq) + 1) * 0.5 * 255
+                lst[j + i * height] += value / factor
+                img.putpixel((i, j), value)
+        #img.save('freq' + str(freq) + '.pgm')
+
+    for f in factors:
+        print f
+    sum_factor = sum(factors)
+    print sum_factor
+    result = Image.new('L', (width, height))
+    for i in range(0, width):
+        for j in range(0, height):
+            result.putpixel((i, j), lst[j + i * height] / sum_factor)
+
+    return result
+
+
+def generate_palette(path):
+    """docstring for generate_palette"""
+    palette = []
+    img = Image.open('data/ramp.png')
+    shift = img.size[0] / 256
+    for i in range(0, 256):
+        pixel = img.getpixel((i * shift, 0))
+        palette.append(pixel[0])
+        palette.append(pixel[1])
+        palette.append(pixel[2])
+
+    assert len(palette) == 768
+
+    return palette
+
+
+def convertToHexa(image, liste):
+    """docstring for convertToHexa"""
+    pass
+
+width = 800
+height = 600
+harmonique = 6
+base = 5
+
+
 table = generate_table(1)
 dictionary = check_table(table)
 
+result = heightmap(table, width, height, harmonique, base)
 
-width = 400
-height = 400
-harmonique = 6
-base = 5
-result = Image.new('L', (width, height))
-
-lst = []
-for i in range(0, width * height):
-    lst.append(0)
-
-for harm in range(0, harmonique):
-    freq = base * 2 ** harm
-    img = Image.new('L', (width, height))
-    for i in range(0, width):
-        for j in range(0, height):
-            value = (perlin(table, i, j, freq) + 1) * 0.5 * 255
-            lst[j + i * height] += value / math.sqrt(2 ** (harmonique - harm - 1))
-            img.putpixel((i, j), value)
-    #img.save('test' + str(freq) + '.pgm')
-
-
-for i in range(0, width):
-    for j in range(0, height):
-        result.putpixel((i, j), lst[j + i * height] / harmonique)
+palette = generate_palette('data/ramp.png')
 
 result.save('result.pgm')
+
+final = result.copy()
+final.putpalette(palette)
+final.show()
+final.save('final.png')
