@@ -4,6 +4,7 @@
 import math
 import sfml as sf
 from hexagon import Hexagon
+import time
 
 
 MARGIN = 70
@@ -192,6 +193,12 @@ def main():
     texture_mgr = TextureManager()
     hexa.set_texture(texture_mgr.convertGroundToTexture(Ground.forest))
     sprite = sf.Sprite(texture_mgr.get_background())
+    font = sf.Font.from_file('data/Ubuntu-L.ttf')
+    text = sf.Text('test', font, 30)
+    text.color = sf.Color.RED
+    text.position = (30, 0)
+    fpstimer = time.time()
+    fpscounter = 0
 
     # On démarre la boucle de jeu
     while window.is_open:
@@ -235,8 +242,15 @@ def main():
                         last_node.set_color(sf.Color.WHITE)
                         last_node.set_ground(Ground.plain)
 
+        if time.time() - fpstimer >= 1:
+            text.string = str(fpscounter) + 'fps'
+            fpstimer = time.time()
+            fpscounter = 0
+
         if survol_on is True:
             window.draw(survol)
+        window.draw(text)
         window.display()
+        fpscounter += 1
 
 main()
