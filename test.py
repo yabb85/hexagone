@@ -3,6 +3,7 @@
 
 import math
 import sfml as sf
+from hexagon import Hexagon
 
 
 MARGIN = 70
@@ -12,12 +13,6 @@ RED = sf.Color(232, 174, 173)
 GREEN = sf.Color(188, 222, 186)
 BORDER = sf.Color(127, 127, 127, 127)
 OVERLOAD = sf.Color(127, 127, 127, 100)
-
-T_BOIS = None
-T_EAU = None
-T_MONTAGNE = None
-T_ARBRE = None
-T_VIDE = None
 
 
 class Ground:
@@ -110,81 +105,6 @@ class Node():
         self.ground = ground
 
 
-class Hexagone(sf.ConvexShape):
-    """
-    Forme géométrique à dessiner
-    """
-    def __init__(self):
-        """docstring for __init__"""
-        self.point_count = 6
-        self.radius = 100
-        x = -self.radius / 2
-        y = self.radius * math.sqrt(3) / 2
-        self.set_point(0, sf.Vector2(x, y))
-        x = self.radius / 2
-        y = self.radius * math.sqrt(3) / 2
-        self.set_point(1, sf.Vector2(x, y))
-        x = self.radius
-        y = 0
-        self.set_point(2, sf.Vector2(x, y))
-        x = self.radius / 2
-        y = -self.radius * math.sqrt(3) / 2
-        self.set_point(3, sf.Vector2(x, y))
-        x = -self.radius / 2
-        y = -self.radius * math.sqrt(3) / 2
-        self.set_point(4, sf.Vector2(x, y))
-        x = -self.radius
-        y = 0
-        self.set_point(5, sf.Vector2(x, y))
-
-    def set_radius(self, radius):
-        """docstring for set_radius"""
-        self.radius = radius
-        x = -self.radius / 2
-        y = self.radius * math.sqrt(3) / 2
-        self.set_point(0, sf.Vector2(x, y))
-        x = self.radius / 2
-        y = self.radius * math.sqrt(3) / 2
-        self.set_point(1, sf.Vector2(x, y))
-        x = self.radius
-        y = 0
-        self.set_point(2, sf.Vector2(x, y))
-        x = self.radius / 2
-        y = -self.radius * math.sqrt(3) / 2
-        self.set_point(3, sf.Vector2(x, y))
-        x = -self.radius / 2
-        y = -self.radius * math.sqrt(3) / 2
-        self.set_point(4, sf.Vector2(x, y))
-        x = -self.radius
-        y = 0
-        self.set_point(5, sf.Vector2(x, y))
-
-    def get_radius(self):
-        """docstring for get_radius"""
-        return self.radius
-
-    def get_apothem(self):
-        """docstring for get_apothem"""
-        return self.radius * math.sqrt(3) / 2
-
-    def set_texture(self, texture):
-        """docstring for set_texture"""
-        self.texture = texture
-
-
-def initialize_hexagone(initial_pos, color, outline_thick, outline_color,
-                        radius, rotate=0):
-    """docstring for initialize_hexagone"""
-    hexa = Hexagone()
-    hexa.fill_color = color
-    hexa.position = initial_pos
-    hexa.outline_thickness = outline_thick
-    hexa.outline_color = outline_color
-    hexa.set_radius(radius)
-    hexa.rotate(rotate)
-    return hexa
-
-
 def display_graph(hexa, window, graph):
     """
     Display all elements contains in graph
@@ -199,7 +119,7 @@ def display_graph(hexa, window, graph):
             pos[0] * hexa.get_apothem()
         x = MARGIN + pos[0] * hexa.get_radius() * 1.5
         hexa.position = (x, y)
-        hexa.fill_color = node.get_color()
+        hexa.set_color(node.get_color())
         hexa.set_texture(texture_mgr.convertGroundToTexture(node.get_ground()))
         window.draw(hexa)
 
@@ -258,7 +178,6 @@ def searchNodeInMap(event, hexa):
 
 def main():
     """docstring for main"""
-    global T_VIDE
     game_size = sf.Vector2(800, 600)
     w, h = game_size
     settings = sf.window.ContextSettings()
@@ -266,9 +185,8 @@ def main():
     window = sf.RenderWindow(sf.VideoMode(w, h), "PySFML test",
                              sf.window.Style.DEFAULT, settings)
 
-    hexa = initialize_hexagone((100, 100), GRAY_127, 1, BORDER, 60)
-    survol = initialize_hexagone((100, 100), OVERLOAD, 1, sf.Color.BLACK,
-                                 60)
+    hexa = Hexagon((100, 100), 60, GRAY_127, 1, BORDER)
+    survol = Hexagon((100, 100), 60, OVERLOAD, 1, sf.Color.BLACK)
     survol_on = False
     last_node = None
     texture_mgr = TextureManager()
