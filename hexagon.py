@@ -1,20 +1,24 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
+"""
+Draw an hexagon
+"""
 
 import math
 import sfml as sf
 
 
 class Hexagon(sf.TransformableDrawable):
-
-    def __init__(self, position, radius, color, thickness, outline_color):
+    """
+    Hexagoanl geometrical form
+    """
+    def __init__(self, position, radius, color, outline_color):
         """docstring for __init__"""
         sf.TransformableDrawable.__init__(self)
         self.vertices = sf.VertexArray(sf.PrimitiveType.TRIANGLES, 18)
         self.points = sf.VertexArray(sf.PrimitiveType.LINES_STRIP, 7)
         self.position = position
         self.radius = radius
-        self.outline_thickness = thickness
         self.outline_color = outline_color
         self.origin = sf.Vector2(0, 0)
         self.color = color
@@ -115,7 +119,12 @@ class Hexagon(sf.TransformableDrawable):
 
     def set_texture(self, texture):
         """docstring for set_texture"""
+
         self.texture = texture
+
+        if texture is None:
+            return
+
         size = texture.size
 
         x = self.radius / 2
@@ -164,7 +173,8 @@ class Hexagon(sf.TransformableDrawable):
         return self.radius * math.sqrt(3) / 2
 
 
-if __name__ == '__main__':
+def main():
+    """docstring for main"""
     position = (70, 70)
     radius = 60
     color = sf.Color(127, 127, 127)
@@ -176,11 +186,10 @@ if __name__ == '__main__':
     eau = sf.Texture.from_file('data/eau.jpg')
     hexa.set_texture(montagne)
 
-    game_size = sf.Vector2(800, 600)
-    w, h = game_size
+    w_size, h_size = sf.Vector2(800, 600)
     settings = sf.window.ContextSettings()
     settings.antialiasing_level = 8
-    window = sf.RenderWindow(sf.VideoMode(w, h), "PySFML test",
+    window = sf.RenderWindow(sf.VideoMode(w_size, h_size), "PySFML test",
                              sf.window.Style.DEFAULT, settings)
 
     while window.is_open:
@@ -209,3 +218,7 @@ if __name__ == '__main__':
                 hexa.set_texture(montagne)
         window.draw(hexa)
         window.display()
+
+
+if __name__ == '__main__':
+    main()

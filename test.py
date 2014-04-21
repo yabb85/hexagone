@@ -1,10 +1,14 @@
 #!/usr/bin/python
 # -*-coding:Utf-8 -*
+"""
+This is a test of wargame
+"""
 
 import math
 import sfml as sf
 from hexagon import Hexagon
 import time
+from unit import Cavalry
 
 
 MARGIN = 70
@@ -16,22 +20,45 @@ BORDER = sf.Color(127, 127, 127, 127)
 OVERLOAD = sf.Color(127, 127, 127, 100)
 
 
-class Ground:
+class Ground(object):
+    """Enumerator for ground type"""
     plain = 0
     forest = 1
     mountain = 2
     water = 3
 
+    def get_plain(self):
+        """docstring for get_plain"""
+        return self.plain
 
-class TextureManager:
-    class __TextureManager:
+    def get_forest(self):
+        """docstring for get_forest"""
+        return self.forest
+
+    def get_mountain(self):
+        """docstring for get_mountain"""
+        return self.mountain
+
+    def get_water(self):
+        """docstring for get_water"""
+        return self.water
+
+
+class TextureManager(object):
+    """Texture manager."""
+    class InternTextureManager(object):
+        """Intern singleton class for texture manager."""
         def __init__(self):
             """docstring for __init__"""
-            self.textures = {
+            self.ground_textures = {
                 Ground.plain: None,
                 Ground.forest: None,
                 Ground.mountain: None,
                 Ground.water: None
+            }
+            self.unit_textures = {
+                "Infantry": None,
+                "Cavalery": None
             }
             self.background = None
             self.load_all_texture()
@@ -39,24 +66,36 @@ class TextureManager:
         def load_all_texture(self):
             """load all texture used in game"""
             self.background = sf.Texture.from_file('data/bois.jpg')
-            self.textures[Ground.forest] = sf.Texture.from_file(
+            self.ground_textures[Ground.forest] = sf.Texture.from_file(
                 'data/arbre.jpg')
-            self.textures[Ground.water] = sf.Texture.from_file('data/eau.jpg')
-            self.textures[Ground.mountain] = sf.Texture.from_file(
+            self.ground_textures[Ground.water] = sf.Texture.from_file(
+                'data/eau.jpg')
+            self.ground_textures[Ground.mountain] = sf.Texture.from_file(
                 'data/montagne.jpg')
-            self.textures[Ground.plain] = sf.Texture.from_file(
+            self.ground_textures[Ground.plain] = sf.Texture.from_file(
                 'data/paper.jpg')
+            # self.unit_textures["Infantry"] = sf.Texture.from_file()
+            self.unit_textures["Cavalry"] = sf.Texture.from_file(
+                'data/cheval.png')
 
-        def convertGroundToTexture(self, ground):
-            """serach the texture associate to ground type"""
-            return self.textures[ground]
+        def convert_ground_to_texture(self, ground):
+            """Search the texture associate to ground type."""
+            return self.ground_textures[ground]
 
-        def convertTextureToGround(self, texture):
-            """docstring for convertTextureToGround"""
+        def convert_texture_to_ground(self, texture):
+            """docstring for convert_texture_to_ground"""
+            # TODO
             pass
 
+        def get_unit_texture(self, unit):
+            """Search the texture for each type of unit."""
+            if unit is not None:
+                return self.unit_textures[unit.get_name()]
+            else:
+                return None
+
         def get_background(self):
-            """docstring for get_background"""
+            """Return the texture of background"""
             return self.background
 
     __instance = None
@@ -64,7 +103,7 @@ class TextureManager:
     def __init__(self):
         """docstring for __init__"""
         if TextureManager.__instance is None:
-            TextureManager.__instance = TextureManager.__TextureManager()
+            TextureManager.__instance = TextureManager.InternTextureManager()
 
     def __getattr__(self, name):
         """docstring for __getattr__"""
@@ -75,15 +114,16 @@ class TextureManager:
         return setattr(self.__instance, name)
 
 
-class Node():
+class Node(object):
     """
-    Représente un case sur le plateau
+    Représente une case sur le plateau
     """
     def __init__(self, pos=(0, 0), ground=Ground.plain, color=sf.Color.WHITE):
         """docstring for __init__"""
         self.color = color
         self.position = pos
         self.ground = ground
+        self.unit = None
 
     def get_position(self):
         """docstring for get_position"""
@@ -105,6 +145,26 @@ class Node():
         """docstring for set_ground"""
         self.ground = ground
 
+    def get_unit(self):
+        """docstring for get_unit"""
+        return self.unit
+
+    def set_unit(self, unit):
+        """docstring for set_unit"""
+        self.unit = unit
+
+
+def display_unit(hexa, window, graph, unit):
+    """docstring for display_unit"""
+    texture_mgr = TextureManager()
+    hexa.set_texture(texture_mgr.get_unit_texture(unit))
+    window.draw(hexa)
+    if unit.get_selected():
+        hexa.set_texture(None)
+        hexa.set_color(sf.Color(250, 50, 250, 50))
+        window.draw(hexa)
+
+
 
 def display_graph(hexa, window, graph):
     """
@@ -116,16 +176,19 @@ def display_graph(hexa, window, graph):
     texture_mgr = TextureManager()
     for node in graph:
         pos = node.get_position()
-        y = MARGIN + pos[1] * hexa.get_apothem() * 2 - \
+        y_pos = MARGIN + pos[1] * hexa.get_apothem() * 2 - \
             pos[0] * hexa.get_apothem()
-        x = MARGIN + pos[0] * hexa.get_radius() * 1.5
-        hexa.position = (x, y)
+        x_pos = MARGIN + pos[0] * hexa.get_radius() * 1.5
+        hexa.position = (x_pos, y_pos)
         hexa.set_color(node.get_color())
-        hexa.set_texture(texture_mgr.convertGroundToTexture(node.get_ground()))
+        hexa.set_texture(texture_mgr.convert_ground_to_texture(
+            node.get_ground()))
         window.draw(hexa)
+        if node.get_unit() is not None:
+            display_unit(hexa, window, graph, node.get_unit())
 
 
-def searchNodeByCoordInList(list_node, coord):
+def search_node_by_coord_in_list(list_node, coord):
     """
     Search if a nade exist in list with the coordinate passed in arguments.
     """
@@ -145,53 +208,52 @@ test = [Node((0, 0)), Node((0, 1)), Node((0, 2)), Node((0, 3)), Node((0, 4)),
         Node((7, 4)), Node((7, 5)), Node((7, 6)), Node((7, 7))]
 
 
-def searchNodeInMap(event, hexa):
+def search_node_in_map(event, hexa):
     """docstring for searchNode"""
     pos = (-1, -1)
     old_dist = (-1, -1)
     coord = (-1, -1)
-    """search element in diagonal"""
+    # search element in diagonal
     for i in range(9):
-        y = MARGIN + i * hexa.get_apothem() * 2 - \
+        y_i = MARGIN + i * hexa.get_apothem() * 2 - \
             i * hexa.get_apothem()
-        x = MARGIN + i * hexa.get_radius() * 1.5
-        dist = (math.fabs(event.position.x - x),
-                math.fabs(event.position.y - y))
+        x_i = MARGIN + i * hexa.get_radius() * 1.5
+        dist = (math.fabs(event.position.x - x_i),
+                math.fabs(event.position.y - y_i))
         if pos == (-1, -1) or dist < old_dist:
             coord = (i, i)
-            pos = (x, y)
+            pos = (x_i, y_i)
             old_dist = dist
     if event.position.y > pos[1]:
         liste = range(coord[0], 15)
     else:
         liste = range(0, coord[0])
     for i in liste:
-        y = (MARGIN + i * hexa.get_apothem() * 2 - coord[0] *
+        y_pos = (MARGIN + i * hexa.get_apothem() * 2 - coord[0] *
              hexa.get_apothem())
         dist = (math.fabs(event.position.x - pos[0]),
-                math.fabs(event.position.y - y))
+                math.fabs(event.position.y - y_pos))
         if dist < old_dist:
             coord = (coord[0], i)
-            pos = (pos[0], y)
+            pos = (pos[0], y_pos)
             old_dist = dist
     return pos, coord
 
 
 def main():
     """docstring for main"""
-    game_size = sf.Vector2(800, 600)
-    w, h = game_size
+    w, h = sf.Vector2(800, 600)
     settings = sf.window.ContextSettings()
     settings.antialiasing_level = 8
     window = sf.RenderWindow(sf.VideoMode(w, h), "PySFML test",
                              sf.window.Style.DEFAULT, settings)
 
-    hexa = Hexagon((100, 100), 60, GRAY_127, 1, BORDER)
-    survol = Hexagon((100, 100), 60, OVERLOAD, 1, sf.Color.BLACK)
+    hexa = Hexagon((100, 100), 60, GRAY_127, BORDER)
+    survol = Hexagon((100, 100), 60, OVERLOAD, sf.Color.BLACK)
     survol_on = False
     last_node = None
     texture_mgr = TextureManager()
-    hexa.set_texture(texture_mgr.convertGroundToTexture(Ground.forest))
+    hexa.set_texture(texture_mgr.convert_ground_to_texture(Ground.forest))
     sprite = sf.Sprite(texture_mgr.get_background())
     font = sf.Font.from_file('data/Ubuntu-L.ttf')
     text = sf.Text('test', font, 30)
@@ -213,10 +275,27 @@ def main():
             if type(event) is sf.KeyEvent and event.pressed and \
                event.code is sf.Keyboard.ESCAPE:
                 window.close()
+            if type(event) is sf.KeyEvent and event.pressed and \
+               event.code is sf.Keyboard.C and last_node is not None:
+                cavalry = Cavalry()
+                cavalry.set_position(last_node.get_position())
+                last_node.set_unit(cavalry)
+            if type(event) is sf.KeyEvent and event.pressed and \
+               event.code is sf.Keyboard.A and last_node is not None:
+                last_node.set_ground(Ground.water)
+            if type(event) is sf.KeyEvent and event.pressed and \
+               event.code is sf.Keyboard.Z and last_node is not None:
+                last_node.set_ground(Ground.forest)
+            if type(event) is sf.KeyEvent and event.pressed and \
+               event.code is sf.Keyboard.E and last_node is not None:
+                last_node.set_ground(Ground.mountain)
+            if type(event) is sf.KeyEvent and event.pressed and \
+               event.code is sf.Keyboard.R and last_node is not None:
+                last_node.set_ground(Ground.plain)
             if type(event) is sf.window.MouseMoveEvent:
-                pos, coord = searchNodeInMap(event, hexa)
+                pos, coord = search_node_in_map(event, hexa)
                 survol.position = pos
-                node = searchNodeByCoordInList(test, coord)
+                node = search_node_by_coord_in_list(test, coord)
                 if node is not None:
                     last_node = node
                     survol_on = True
@@ -227,21 +306,10 @@ def main():
                 survol_on = False
             if type(event) is sf.window.MouseButtonEvent and event.pressed:
                 if last_node is not None and \
-                   searchNodeByCoordInList(test, last_node.get_position()) \
-                   is not None:
-                    if last_node.get_color() == sf.Color.WHITE:
-                        last_node.set_color(EAU)
-                        last_node.set_ground(Ground.water)
-                    elif last_node.get_color() == EAU:
-                        last_node.set_color(RED)
-                        last_node.set_ground(Ground.mountain)
-                    elif last_node.get_color() == RED:
-                        last_node.set_color(GREEN)
-                        last_node.set_ground(Ground.forest)
-                    else:
-                        last_node.set_color(sf.Color.WHITE)
-                        last_node.set_ground(Ground.plain)
-
+                   search_node_by_coord_in_list(test, last_node.get_position()) is not None:
+                    if last_node.get_unit() is not None:
+                        select =  last_node.get_unit().get_selected()
+                        last_node.get_unit().set_selected(not select)
         if time.time() - fpstimer >= 1:
             text.string = str(fpscounter) + 'fps'
             fpstimer = time.time()
