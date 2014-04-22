@@ -165,7 +165,6 @@ def display_unit(hexa, window, graph, unit):
         window.draw(hexa)
 
 
-
 def display_graph(hexa, window, graph):
     """
     Display all elements contains in graph
@@ -198,7 +197,7 @@ def search_node_by_coord_in_list(list_node, coord):
     return None
 
 
-test = [Node((0, 0)), Node((0, 1)), Node((0, 2)), Node((0, 3)), Node((0, 4)),
+TEST = [Node((0, 0)), Node((0, 1)), Node((0, 2)), Node((0, 3)), Node((0, 4)),
         Node((1, 1)), Node((1, 2)), Node((1, 3)), Node((1, 4)),
         Node((2, 1)), Node((2, 2)), Node((2, 3)), Node((2, 4)), Node((2, 5)),
         Node((3, 2)), Node((3, 3)), Node((3, 4)), Node((3, 5)),
@@ -230,7 +229,7 @@ def search_node_in_map(event, hexa):
         liste = range(0, coord[0])
     for i in liste:
         y_pos = (MARGIN + i * hexa.get_apothem() * 2 - coord[0] *
-             hexa.get_apothem())
+                 hexa.get_apothem())
         dist = (math.fabs(event.position.x - pos[0]),
                 math.fabs(event.position.y - y_pos))
         if dist < old_dist:
@@ -242,10 +241,10 @@ def search_node_in_map(event, hexa):
 
 def main():
     """docstring for main"""
-    w, h = sf.Vector2(800, 600)
+    width, height = sf.Vector2(800, 600)
     settings = sf.window.ContextSettings()
     settings.antialiasing_level = 8
-    window = sf.RenderWindow(sf.VideoMode(w, h), "PySFML test",
+    window = sf.RenderWindow(sf.VideoMode(width, height), "PySFML test",
                              sf.window.Style.DEFAULT, settings)
 
     hexa = Hexagon((100, 100), 60, GRAY_127, BORDER)
@@ -266,7 +265,7 @@ def main():
     while window.is_open:
         window.clear(sf.Color(50, 200, 50))
         window.draw(sprite)
-        display_graph(hexa, window, test)
+        display_graph(hexa, window, TEST)
         for event in window.events:
             if type(event) is sf.CloseEvent:
                 window.close()
@@ -295,7 +294,7 @@ def main():
             if type(event) is sf.window.MouseMoveEvent:
                 pos, coord = search_node_in_map(event, hexa)
                 survol.position = pos
-                node = search_node_by_coord_in_list(test, coord)
+                node = search_node_by_coord_in_list(TEST, coord)
                 if node is not None:
                     last_node = node
                     survol_on = True
@@ -306,9 +305,10 @@ def main():
                 survol_on = False
             if type(event) is sf.window.MouseButtonEvent and event.pressed:
                 if last_node is not None and \
-                   search_node_by_coord_in_list(test, last_node.get_position()) is not None:
+                   search_node_by_coord_in_list(
+                       TEST, last_node.get_position()) is not None:
                     if last_node.get_unit() is not None:
-                        select =  last_node.get_unit().get_selected()
+                        select = last_node.get_unit().get_selected()
                         last_node.get_unit().set_selected(not select)
         if time.time() - fpstimer >= 1:
             text.string = str(fpscounter) + 'fps'

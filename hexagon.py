@@ -20,130 +20,59 @@ class Hexagon(sf.TransformableDrawable):
         self.position = position
         self.radius = radius
         self.outline_color = outline_color
-        self.origin = sf.Vector2(0, 0)
         self.color = color
         self.texture = None
 
-        x = self.radius / 2
-        y = self.radius * math.sqrt(3) / 2
+        for i in range(7):
+            angle = 2 * math.pi / 6 * i
+            x_i = self.origin[0] + self.radius * math.cos(angle)
+            y_i = self.origin[1] + self.radius * math.sin(angle)
+            self.points[i].position = sf.Vector2(x_i, y_i)
+            self.points[i].color = outline_color
 
-        self.points[0].position = sf.Vector2(-x, y)
-        self.points[0].color = outline_color
-        self.points[1].position = sf.Vector2(x, y)
-        self.points[1].color = outline_color
-        self.points[2].position = sf.Vector2(self.radius, 0)
-        self.points[2].color = outline_color
-        self.points[3].position = sf.Vector2(x, -y)
-        self.points[3].color = outline_color
-        self.points[4].position = sf.Vector2(-x, -y)
-        self.points[4].color = outline_color
-        self.points[5].position = sf.Vector2(-self.radius, 0)
-        self.points[5].color = outline_color
-        self.points[6].position = sf.Vector2(-x, y)
-        self.points[6].color = outline_color
-
-        self.vertices[0].position = self.origin
-        self.vertices[0].color = color
-        self.vertices[1].position = self.points[0].position
-        self.vertices[1].color = color
-        self.vertices[2].position = self.points[1].position
-        self.vertices[2].color = color
-        self.vertices[3].position = self.origin
-        self.vertices[3].color = color
-        self.vertices[4].position = self.points[1].position
-        self.vertices[4].color = color
-        self.vertices[5].position = self.points[2].position
-        self.vertices[5].color = color
-        self.vertices[6].position = self.origin
-        self.vertices[6].color = color
-        self.vertices[7].position = self.points[2].position
-        self.vertices[7].color = color
-        self.vertices[8].position = self.points[3].position
-        self.vertices[8].color = color
-        self.vertices[9].position = self.origin
-        self.vertices[9].color = color
-        self.vertices[10].position = self.points[3].position
-        self.vertices[10].color = color
-        self.vertices[11].position = self.points[4].position
-        self.vertices[11].color = color
-        self.vertices[12].position = self.origin
-        self.vertices[12].color = color
-        self.vertices[13].position = self.points[4].position
-        self.vertices[13].color = color
-        self.vertices[14].position = self.points[5].position
-        self.vertices[14].color = color
-        self.vertices[15].position = self.origin
-        self.vertices[15].color = color
-        self.vertices[16].position = self.points[5].position
-        self.vertices[16].color = color
-        self.vertices[17].position = self.points[0].position
-        self.vertices[17].color = color
+        shift = -1
+        for i in range(18):
+            if i % 3 == 0:
+                self.vertices[i].position = self.origin
+                shift += 2
+            else:
+                self.vertices[i].position = self.points[i - shift].position
+            self.vertices[i].color = color
 
     def draw(self, target, states):
-        """docstring for draw"""
+        """Draw the hexagon."""
         states.transform = self.transform
         states.texture = self.texture
         target.draw(self.vertices, states)
         target.draw(self.points, states)
 
     def set_color(self, color):
-        """docstring for set_color"""
-        self.vertices[0].color = color
-        self.vertices[1].color = color
-        self.vertices[2].color = color
-        self.vertices[3].color = color
-        self.vertices[4].color = color
-        self.vertices[5].color = color
-        self.vertices[6].color = color
-        self.vertices[7].color = color
-        self.vertices[8].color = color
-        self.vertices[9].color = color
-        self.vertices[10].color = color
-        self.vertices[11].color = color
-        self.vertices[12].color = color
-        self.vertices[13].color = color
-        self.vertices[14].color = color
-        self.vertices[15].color = color
-        self.vertices[16].color = color
-        self.vertices[17].color = color
+        """Apply a new color at hexagon."""
+        for i in range(18):
+            self.vertices[i].color = color
 
     def set_outline_color(self, color):
-        """docstring for set_fill_color"""
-        self.points[0].color = color
-        self.points[1].color = color
-        self.points[2].color = color
-        self.points[3].color = color
-        self.points[4].color = color
-        self.points[5].color = color
-        self.points[6].color = color
+        """Apply a new outline color."""
+        for i in range(7):
+            self.points[i].color = color
 
     def set_texture(self, texture):
-        """docstring for set_texture"""
-
+        """Apply a new texture at hexagon."""
         self.texture = texture
-
         if texture is None:
             return
 
         size = texture.size
-
-        x = self.radius / 2
-        y = self.radius * math.sqrt(3) / 2
-        rad = self.radius
         coef = float(size[0]) / (self.radius * 2)
-
-        self.points[0].tex_coords = sf.Vector2(
-            (rad - x) * coef, (rad + y) * coef)
-        self.points[1].tex_coords = sf.Vector2(
-            (rad + x) * coef, (rad + y) * coef)
-        self.points[2].tex_coords = sf.Vector2(
-            (rad * 2) * coef, rad * coef)
-        self.points[3].tex_coords = sf.Vector2(
-            (rad + x) * coef, (rad - y) * coef)
-        self.points[4].tex_coords = sf.Vector2(
-            (rad - x) * coef, (rad - y) * coef)
-        self.points[5].tex_coords = sf.Vector2(0, rad * coef)
-        self.points[6].tex_coords = sf.Vector2(rad * coef, rad * coef)
+        x_center = size[0] / 2
+        y_center = size[1] / 2
+        for i in range(6):
+            angle = 2 * math.pi / 6 * i
+            x_i = x_center + self.radius * math.cos(angle) * coef
+            y_i = y_center + self.radius * math.sin(angle) * coef
+            self.points[i].tex_coords = sf.Vector2(x_i, y_i)
+        self.points[6].tex_coords = sf.Vector2(
+            self.radius * coef, self.radius * coef)
 
         self.vertices[0].tex_coords = self.points[6].tex_coords
         self.vertices[1].tex_coords = self.points[0].tex_coords
@@ -178,9 +107,8 @@ def main():
     position = (70, 70)
     radius = 60
     color = sf.Color(127, 127, 127)
-    thickness = 1
     outline_color = sf.Color.BLACK
-    hexa = Hexagon(position, radius, color, thickness, outline_color)
+    hexa = Hexagon(position, radius, color, outline_color)
 
     montagne = sf.Texture.from_file('data/montagne.jpg')
     eau = sf.Texture.from_file('data/eau.jpg')
