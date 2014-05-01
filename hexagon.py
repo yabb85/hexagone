@@ -8,9 +8,47 @@ import math
 import sfml as sf
 
 
+class HexagonLine(sf.TransformableDrawable):
+    """
+    Hexagonal geometrical form
+    """
+    def __init__(self, position, radius, color):
+        """docstring for __init__"""
+        sf.TransformableDrawable.__init__(self)
+        self.points = sf.VertexArray(sf.PrimitiveType.LINES_STRIP, 7)
+        self.position = position
+        self.radius = radius
+        self.outline_color = color
+
+        for i in range(7):
+            angle = 2 * math.pi / 6 * i
+            x_i = self.origin[0] + self.radius * math.cos(angle)
+            y_i = self.origin[1] + self.radius * math.sin(angle)
+            self.points[i].position = sf.Vector2(x_i, y_i)
+            self.points[i].color = self.outline_color
+
+    def draw(self, target, states):
+        """Draw the hexagon."""
+        states.transform = self.transform
+        target.draw(self.points, states)
+
+    def set_color(self, color):
+        """Apply a new outline color."""
+        for i in range(7):
+            self.points[i].color = color
+
+    def get_radius(self):
+        """docstring for get_radius"""
+        return self.radius
+
+    def get_apothem(self):
+        """docstring for get_apothem"""
+        return self.radius * math.sqrt(3) / 2
+
+
 class Hexagon(sf.TransformableDrawable):
     """
-    Hexagoanl geometrical form
+    Hexagonal geometrical form
     """
     def __init__(self, position, radius, color, outline_color):
         """docstring for __init__"""

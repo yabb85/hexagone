@@ -6,9 +6,10 @@ This is a test of wargame
 
 import math
 import sfml as sf
-from hexagon import Hexagon
+from hexagon import Hexagon, HexagonLine
 import time
 from unit import Cavalry
+import operator
 
 
 MARGIN = 70
@@ -123,7 +124,6 @@ class Node(object):
         self.color = color
         self.position = pos
         self.ground = ground
-        self.unit = None
 
     def get_position(self):
         """docstring for get_position"""
@@ -145,34 +145,57 @@ class Node(object):
         """docstring for set_ground"""
         self.ground = ground
 
-    def get_unit(self):
-        """docstring for get_unit"""
-        return self.unit
 
-    def set_unit(self, unit):
-        """docstring for set_unit"""
-        self.unit = unit
-
-
-def display_unit(hexa, window, graph, unit):
-    """docstring for display_unit"""
-    texture_mgr = TextureManager()
-    hexa.set_texture(texture_mgr.get_unit_texture(unit))
-    window.draw(hexa)
-    if unit.get_selected():
-        hexa.set_texture(None)
-        hexa.set_color(sf.Color(250, 50, 250, 50))
-        window.draw(hexa)
+def convert_pixel_to_coord(position):
+    """docstring for convert_pixel_to_coord"""
+    hexa = Hexagon((0, 0), 60, RED, BORDER)
+    x_coord = (position[0] - MARGIN) / (hexa.get_radius() * 1.5)
+    y_coord = (position[1] - MARGIN + x_coord + hexa.get_apothem()) / \
+        (hexa.get_radius() * 2)
+    return (x_coord, y_coord)
 
 
-def display_graph(hexa, window, graph):
+def convert_coord_to_pixel(coord):
+    """docstring for convert_coord_to_pixel"""
+    hexa = Hexagon((0, 0), 60, RED, BORDER)
+    y_pos = MARGIN + coord[1] * hexa.get_apothem() * 2 - coord[0] * \
+        hexa.get_apothem()
+    x_pos = MARGIN + coord[0] * hexa.get_radius() * 1.5
+    return (x_pos, y_pos)
+
+
+def display_units(window, units):
     """
-    Display all elements contains in graph
-    :param hexa:the geometrical form used to display
+    Display all unit on the map
+    :param window:window used to display
+    :param units:list of all units
+    """
+    hexa = Hexagon((100, 100), 60, GRAY_127, BORDER)
+    texture_mgr = TextureManager()
+    for unit in units:
+        hexa.set_texture(texture_mgr.get_unit_texture(unit))
+        hexa.position = convert_coord_to_pixel(unit.get_position())
+        window.draw(hexa)
+        if unit.get_selected():
+            hexa.set_texture(None)
+            hexa.set_color(sf.Color(250, 50, 250, 50))
+            window.draw(hexa)
+            neighbors = unit.get_neighbors()
+            for i in range(len(neighbors)):
+                pos = unit.get_position()
+                neighbor = (neighbors[i][0] + pos[0], neighbors[i][1] + pos[1])
+                hexa.position = convert_coord_to_pixel(neighbor)
+                hexa.set_color(sf.Color(0, 0, 250, 50))
+                window.draw(hexa)
+
+
+def display_grid(window, graph):
+    """
+    Display all elements contains in graph (grid on map)
     :param window:window used to display
     :param graph:list of all elements to displaying
     """
-    texture_mgr = TextureManager()
+    hexa = HexagonLine((100, 100), 60, BORDER)
     for node in graph:
         pos = node.get_position()
         y_pos = MARGIN + pos[1] * hexa.get_apothem() * 2 - \
@@ -180,16 +203,12 @@ def display_graph(hexa, window, graph):
         x_pos = MARGIN + pos[0] * hexa.get_radius() * 1.5
         hexa.position = (x_pos, y_pos)
         hexa.set_color(node.get_color())
-        hexa.set_texture(texture_mgr.convert_ground_to_texture(
-            node.get_ground()))
         window.draw(hexa)
-        if node.get_unit() is not None:
-            display_unit(hexa, window, graph, node.get_unit())
 
 
 def search_node_by_coord_in_list(list_node, coord):
     """
-    Search if a nade exist in list with the coordinate passed in arguments.
+    Search if a node exist in list with the coordinate passed in arguments.
     """
     for node in list_node:
         if node.get_position() == coord:
@@ -197,46 +216,124 @@ def search_node_by_coord_in_list(list_node, coord):
     return None
 
 
-TEST = [Node((0, 0)), Node((0, 1)), Node((0, 2)), Node((0, 3)), Node((0, 4)),
-        Node((1, 1)), Node((1, 2)), Node((1, 3)), Node((1, 4)),
-        Node((2, 1)), Node((2, 2)), Node((2, 3)), Node((2, 4)), Node((2, 5)),
-        Node((3, 2)), Node((3, 3)), Node((3, 4)), Node((3, 5)),
-        Node((4, 2)), Node((4, 3)), Node((4, 4)), Node((4, 5)), Node((4, 6)),
-        Node((5, 3)), Node((5, 4)), Node((5, 5)), Node((5, 6)),
-        Node((6, 3)), Node((6, 4)), Node((6, 5)), Node((6, 6)), Node((6, 7)),
-        Node((7, 4)), Node((7, 5)), Node((7, 6)), Node((7, 7))]
+def search_unit_by_coord_in_list(units, coord):
+    """docstring for search_unit_by_coord_in_list"""
+    for unit in units:
+        if unit.get_position() == coord:
+            return unit
+    return None
+
+
+MAP = [Node((0, 0)), Node((0, 1)), Node((0, 2)), Node((0, 3)), Node((0, 4)),
+       Node((1, 1)), Node((1, 2)), Node((1, 3)), Node((1, 4)),
+       Node((2, 1)), Node((2, 2)), Node((2, 3)), Node((2, 4)), Node((2, 5)),
+       Node((3, 2)), Node((3, 3)), Node((3, 4)), Node((3, 5)),
+       Node((4, 2)), Node((4, 3)), Node((4, 4)), Node((4, 5)), Node((4, 6)),
+       Node((5, 3)), Node((5, 4)), Node((5, 5)), Node((5, 6)),
+       Node((6, 3)), Node((6, 4)), Node((6, 5)), Node((6, 6)), Node((6, 7)),
+       Node((7, 4)), Node((7, 5)), Node((7, 6)), Node((7, 7))]
 
 
 def search_node_in_map(event, hexa):
     """docstring for searchNode"""
+    neighbors = [
+        (+1, +1), (+1, 0), (0, -1),
+        (-1, -1), (-1, 0), (0, +1),
+        (0, 0)
+    ]
     pos = (-1, -1)
-    old_dist = (-1, -1)
+    old_dist = -1
     coord = (-1, -1)
-    # search element in diagonal
+    # search element in diagonal (search column)
     for i in range(9):
         y_i = MARGIN + i * hexa.get_apothem() * 2 - \
             i * hexa.get_apothem()
         x_i = MARGIN + i * hexa.get_radius() * 1.5
-        dist = (math.fabs(event.position.x - x_i),
-                math.fabs(event.position.y - y_i))
-        if pos == (-1, -1) or dist < old_dist:
+        dist_x = math.fabs(event.position.x - x_i)
+        if pos == (-1, -1) or dist_x < old_dist:
             coord = (i, i)
             pos = (x_i, y_i)
-            old_dist = dist
+            old_dist = dist_x
+    # create a list of element on same column
     if event.position.y > pos[1]:
-        liste = range(coord[0], 15)
+        liste = range(coord[0] - 1, 15)
     else:
-        liste = range(0, coord[0])
+        liste = range(0, coord[0] + 1)
+    old_dist = -1
+    # search the row
     for i in liste:
         y_pos = (MARGIN + i * hexa.get_apothem() * 2 - coord[0] *
                  hexa.get_apothem())
-        dist = (math.fabs(event.position.x - pos[0]),
-                math.fabs(event.position.y - y_pos))
-        if dist < old_dist:
+        dist_y = math.fabs(event.position.y - y_pos)
+        if old_dist == -1 or dist_y < old_dist:
             coord = (coord[0], i)
             pos = (pos[0], y_pos)
+            old_dist = dist_y
+    old_dist = -1
+    # improve the position of element selected with their neighbors
+    for neighbor in neighbors:
+        act_coord = tuple(map(operator.add, coord, neighbor))
+        y_pos = MARGIN + act_coord[1] * hexa.get_apothem() * 2 - \
+            act_coord[0] * hexa.get_apothem()
+        x_pos = MARGIN + act_coord[0] * hexa.get_radius() * 1.5
+        dist = math.sqrt((event.position.x - x_pos)**2 +
+                         (event.position.y - y_pos)**2)
+        if old_dist == -1 or dist < old_dist:
+            pos = (x_pos, y_pos)
+            final_coord = act_coord
             old_dist = dist
+    coord = final_coord
     return pos, coord
+
+
+def event_key_dispatcher(event, window, last_node, units):
+    """docstring for event_key_dispatcher"""
+    if event.pressed and event.code is sf.Keyboard.ESCAPE:
+        window.close()
+    if event.pressed and event.code is sf.Keyboard.C and last_node is not None:
+        cavalry = Cavalry()
+        cavalry.set_position(last_node.get_position())
+        units.append(cavalry)
+    if event.pressed and event.code is sf.Keyboard.A and last_node is not None:
+        last_node.set_ground(Ground.water)
+    if event.pressed and event.code is sf.Keyboard.Z and last_node is not None:
+        last_node.set_ground(Ground.forest)
+    if event.pressed and event.code is sf.Keyboard.E and last_node is not None:
+        last_node.set_ground(Ground.mountain)
+    if event.pressed and event.code is sf.Keyboard.R and last_node is not None:
+        last_node.set_ground(Ground.plain)
+
+
+def event_dispatcher(event, window, last_node, units, survol, survol_on):
+    """docstring for event_dispatcher"""
+    hexa = Hexagon((100, 100), 60, GRAY_127, BORDER)
+    if type(event) is sf.CloseEvent:
+        window.close()
+    if type(event) is sf.ResizeEvent:
+        window.view = sf.View(sf.Rectangle((0, 0), window.size))
+    if type(event) is sf.KeyEvent:
+        event_key_dispatcher(event, window, last_node, units)
+    if type(event) is sf.window.MouseMoveEvent:
+        pos, coord = search_node_in_map(event, hexa)
+        survol.position = pos
+        node = search_node_by_coord_in_list(MAP, coord)
+        if node is not None:
+            last_node = node
+            survol_on = True
+        else:
+            last_node = None
+            survol_on = False
+    if type(event) is sf.window.FocusEvent:
+        survol_on = False
+    if type(event) is sf.window.MouseButtonEvent and event.pressed:
+        if last_node is not None and \
+            search_node_by_coord_in_list(
+                MAP, last_node.get_position()) is not None:
+            unit = search_unit_by_coord_in_list(units,
+                                                last_node.get_position())
+            if unit is not None:
+                unit.set_selected(not unit.get_selected())
+    return survol_on, last_node
 
 
 def main():
@@ -247,12 +344,10 @@ def main():
     window = sf.RenderWindow(sf.VideoMode(width, height), "PySFML test",
                              sf.window.Style.DEFAULT, settings)
 
-    hexa = Hexagon((100, 100), 60, GRAY_127, BORDER)
-    survol = Hexagon((100, 100), 60, OVERLOAD, sf.Color.BLACK)
     survol_on = False
     last_node = None
     texture_mgr = TextureManager()
-    hexa.set_texture(texture_mgr.convert_ground_to_texture(Ground.forest))
+    survol = Hexagon((100, 100), 60, OVERLOAD, sf.Color.BLACK)
     sprite = sf.Sprite(texture_mgr.get_background())
     font = sf.Font.from_file('data/Ubuntu-L.ttf')
     text = sf.Text('test', font, 30)
@@ -260,61 +355,21 @@ def main():
     text.position = (30, 0)
     fpstimer = time.time()
     fpscounter = 0
+    units = []
 
     # On démarre la boucle de jeu
     while window.is_open:
         window.clear(sf.Color(50, 200, 50))
         window.draw(sprite)
-        display_graph(hexa, window, TEST)
+        display_grid(window, MAP)
+        display_units(window, units)
         for event in window.events:
-            if type(event) is sf.CloseEvent:
-                window.close()
-            if type(event) is sf.ResizeEvent:
-                window.view = sf.View(sf.Rectangle((0, 0), window.size))
-            if type(event) is sf.KeyEvent and event.pressed and \
-               event.code is sf.Keyboard.ESCAPE:
-                window.close()
-            if type(event) is sf.KeyEvent and event.pressed and \
-               event.code is sf.Keyboard.C and last_node is not None:
-                cavalry = Cavalry()
-                cavalry.set_position(last_node.get_position())
-                last_node.set_unit(cavalry)
-            if type(event) is sf.KeyEvent and event.pressed and \
-               event.code is sf.Keyboard.A and last_node is not None:
-                last_node.set_ground(Ground.water)
-            if type(event) is sf.KeyEvent and event.pressed and \
-               event.code is sf.Keyboard.Z and last_node is not None:
-                last_node.set_ground(Ground.forest)
-            if type(event) is sf.KeyEvent and event.pressed and \
-               event.code is sf.Keyboard.E and last_node is not None:
-                last_node.set_ground(Ground.mountain)
-            if type(event) is sf.KeyEvent and event.pressed and \
-               event.code is sf.Keyboard.R and last_node is not None:
-                last_node.set_ground(Ground.plain)
-            if type(event) is sf.window.MouseMoveEvent:
-                pos, coord = search_node_in_map(event, hexa)
-                survol.position = pos
-                node = search_node_by_coord_in_list(TEST, coord)
-                if node is not None:
-                    last_node = node
-                    survol_on = True
-                else:
-                    last_node = None
-                    survol_on = False
-            if type(event) is sf.window.FocusEvent:
-                survol_on = False
-            if type(event) is sf.window.MouseButtonEvent and event.pressed:
-                if last_node is not None and \
-                   search_node_by_coord_in_list(
-                       TEST, last_node.get_position()) is not None:
-                    if last_node.get_unit() is not None:
-                        select = last_node.get_unit().get_selected()
-                        last_node.get_unit().set_selected(not select)
+            survol_on, last_node = event_dispatcher(event, window, last_node,
+                                                    units, survol, survol_on)
         if time.time() - fpstimer >= 1:
             text.string = str(fpscounter) + 'fps'
             fpstimer = time.time()
             fpscounter = 0
-
         if survol_on is True:
             window.draw(survol)
         window.draw(text)
