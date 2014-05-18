@@ -19,6 +19,7 @@ RED = sf.Color(232, 174, 173)
 GREEN = sf.Color(188, 222, 186)
 BORDER = sf.Color(127, 127, 127, 127)
 OVERLOAD = sf.Color(127, 127, 127, 100)
+SIZE = 50
 
 
 class Ground(object):
@@ -66,7 +67,8 @@ class TextureManager(object):
 
         def load_all_texture(self):
             """load all texture used in game"""
-            self.background = sf.Texture.from_file('data/bois.jpg')
+            # self.background = sf.Texture.from_file('data/bois.jpg')
+            self.background = sf.Texture.from_file('final.png')
             self.ground_textures[Ground.forest] = sf.Texture.from_file(
                 'data/arbre.jpg')
             self.ground_textures[Ground.water] = sf.Texture.from_file(
@@ -120,35 +122,35 @@ class Node(object):
     Représente une case sur le plateau
     """
     def __init__(self, pos=(0, 0), ground=Ground.plain, color=sf.Color.WHITE):
-        """docstring for __init__"""
+        """Constructor"""
         self.color = color
         self.position = pos
         self.ground = ground
 
     def get_position(self):
-        """docstring for get_position"""
+        """Return the position of node in graph."""
         return self.position
 
     def get_color(self):
-        """docstring for get_color"""
+        """Return the color of node."""
         return self.color
 
     def set_color(self, color):
-        """docstring for set_color"""
+        """Set a new color for this node."""
         self.color = color
 
     def get_ground(self):
-        """docstring for get_ground"""
+        """Return a ground type for this node"""
         return self.ground
 
     def set_ground(self, ground):
-        """docstring for set_ground"""
+        """Set a new ground type for this node"""
         self.ground = ground
 
 
 def convert_pixel_to_coord(position):
     """docstring for convert_pixel_to_coord"""
-    hexa = Hexagon((0, 0), 60, RED, BORDER)
+    hexa = Hexagon((0, 0), SIZE, RED, BORDER)
     x_coord = (position[0] - MARGIN) / (hexa.get_radius() * 1.5)
     y_coord = (position[1] - MARGIN + x_coord + hexa.get_apothem()) / \
         (hexa.get_radius() * 2)
@@ -157,7 +159,7 @@ def convert_pixel_to_coord(position):
 
 def convert_coord_to_pixel(coord):
     """docstring for convert_coord_to_pixel"""
-    hexa = Hexagon((0, 0), 60, RED, BORDER)
+    hexa = Hexagon((0, 0), SIZE, RED, BORDER)
     y_pos = MARGIN + coord[1] * hexa.get_apothem() * 2 - coord[0] * \
         hexa.get_apothem()
     x_pos = MARGIN + coord[0] * hexa.get_radius() * 1.5
@@ -170,7 +172,7 @@ def display_units(window, units):
     :param window:window used to display
     :param units:list of all units
     """
-    hexa = Hexagon((100, 100), 60, GRAY_127, BORDER)
+    hexa = Hexagon((100, 100), SIZE, GRAY_127, BORDER)
     texture_mgr = TextureManager()
     for unit in units:
         hexa.set_texture(texture_mgr.get_unit_texture(unit))
@@ -195,7 +197,7 @@ def display_grid(window, graph):
     :param window:window used to display
     :param graph:list of all elements to displaying
     """
-    hexa = HexagonLine((100, 100), 60, BORDER)
+    hexa = HexagonLine((100, 100), SIZE, BORDER)
     for node in graph:
         pos = node.get_position()
         y_pos = MARGIN + pos[1] * hexa.get_apothem() * 2 - \
@@ -224,15 +226,18 @@ def search_unit_by_coord_in_list(units, coord):
     return None
 
 
-MAP = [Node((0, 0)), Node((0, 1)), Node((0, 2)), Node((0, 3)), Node((0, 4)),
-       Node((1, 1)), Node((1, 2)), Node((1, 3)), Node((1, 4)),
-       Node((2, 1)), Node((2, 2)), Node((2, 3)), Node((2, 4)), Node((2, 5)),
-       Node((3, 2)), Node((3, 3)), Node((3, 4)), Node((3, 5)),
-       Node((4, 2)), Node((4, 3)), Node((4, 4)), Node((4, 5)), Node((4, 6)),
-       Node((5, 3)), Node((5, 4)), Node((5, 5)), Node((5, 6)),
-       Node((6, 3)), Node((6, 4)), Node((6, 5)), Node((6, 6)), Node((6, 7)),
-       Node((7, 4)), Node((7, 5)), Node((7, 6)), Node((7, 7))]
-
+def generate_grid(height, width):
+    """docstring for generate_grid"""
+    liste = []
+    base = 0
+    for i in range(width):
+        for j in range(base, height):
+            liste.append(Node((i, j)))
+        if i != 0 and i % 2 == 1:
+            height += 1
+        else:
+            base += 1
+    return liste
 
 def search_node_in_map(event, hexa):
     """docstring for searchNode"""
@@ -249,11 +254,11 @@ def search_node_in_map(event, hexa):
         y_i = MARGIN + i * hexa.get_apothem() * 2 - \
             i * hexa.get_apothem()
         x_i = MARGIN + i * hexa.get_radius() * 1.5
-        dist_x = math.fabs(event.position.x - x_i)
-        if pos == (-1, -1) or dist_x < old_dist:
+        dist = math.fabs(event.position.x - x_i)
+        if pos == (-1, -1) or dist < old_dist:
             coord = (i, i)
             pos = (x_i, y_i)
-            old_dist = dist_x
+            old_dist = dist
     # create a list of element on same column
     if event.position.y > pos[1]:
         liste = range(coord[0] - 1, 15)
@@ -264,22 +269,22 @@ def search_node_in_map(event, hexa):
     for i in liste:
         y_pos = (MARGIN + i * hexa.get_apothem() * 2 - coord[0] *
                  hexa.get_apothem())
-        dist_y = math.fabs(event.position.y - y_pos)
-        if old_dist == -1 or dist_y < old_dist:
+        dist = math.fabs(event.position.y - y_pos)
+        if old_dist == -1 or dist < old_dist:
             coord = (coord[0], i)
             pos = (pos[0], y_pos)
-            old_dist = dist_y
+            old_dist = dist
     old_dist = -1
     # improve the position of element selected with their neighbors
-    for neighbor in neighbors:
-        act_coord = tuple(map(operator.add, coord, neighbor))
-        y_pos = MARGIN + act_coord[1] * hexa.get_apothem() * 2 - \
+    for i in neighbors:
+        act_coord = tuple(map(operator.add, coord, i))
+        y_i = MARGIN + act_coord[1] * hexa.get_apothem() * 2 - \
             act_coord[0] * hexa.get_apothem()
-        x_pos = MARGIN + act_coord[0] * hexa.get_radius() * 1.5
-        dist = math.sqrt((event.position.x - x_pos)**2 +
-                         (event.position.y - y_pos)**2)
+        x_i = MARGIN + act_coord[0] * hexa.get_radius() * 1.5
+        dist = math.sqrt((event.position.x - x_i)**2 +
+                         (event.position.y - y_i)**2)
         if old_dist == -1 or dist < old_dist:
-            pos = (x_pos, y_pos)
+            pos = (x_i, y_i)
             final_coord = act_coord
             old_dist = dist
     coord = final_coord
@@ -304,9 +309,9 @@ def event_key_dispatcher(event, window, last_node, units):
         last_node.set_ground(Ground.plain)
 
 
-def event_dispatcher(event, window, last_node, units, survol, survol_on):
+def event_dispatcher(event, window, last_node, units, survol, survol_on, grid):
     """docstring for event_dispatcher"""
-    hexa = Hexagon((100, 100), 60, GRAY_127, BORDER)
+    hexa = Hexagon((100, 100), SIZE, GRAY_127, BORDER)
     if type(event) is sf.CloseEvent:
         window.close()
     if type(event) is sf.ResizeEvent:
@@ -316,7 +321,7 @@ def event_dispatcher(event, window, last_node, units, survol, survol_on):
     if type(event) is sf.window.MouseMoveEvent:
         pos, coord = search_node_in_map(event, hexa)
         survol.position = pos
-        node = search_node_by_coord_in_list(MAP, coord)
+        node = search_node_by_coord_in_list(grid, coord)
         if node is not None:
             last_node = node
             survol_on = True
@@ -328,7 +333,7 @@ def event_dispatcher(event, window, last_node, units, survol, survol_on):
     if type(event) is sf.window.MouseButtonEvent and event.pressed:
         if last_node is not None and \
             search_node_by_coord_in_list(
-                MAP, last_node.get_position()) is not None:
+                grid, last_node.get_position()) is not None:
             unit = search_unit_by_coord_in_list(units,
                                                 last_node.get_position())
             if unit is not None:
@@ -344,10 +349,11 @@ def main():
     window = sf.RenderWindow(sf.VideoMode(width, height), "PySFML test",
                              sf.window.Style.DEFAULT, settings)
 
+    grid = generate_grid(6, 10)
     survol_on = False
     last_node = None
     texture_mgr = TextureManager()
-    survol = Hexagon((100, 100), 60, OVERLOAD, sf.Color.BLACK)
+    survol = Hexagon((100, 100), SIZE, OVERLOAD, sf.Color.BLACK)
     sprite = sf.Sprite(texture_mgr.get_background())
     font = sf.Font.from_file('data/Ubuntu-L.ttf')
     text = sf.Text('test', font, 30)
@@ -361,11 +367,12 @@ def main():
     while window.is_open:
         window.clear(sf.Color(50, 200, 50))
         window.draw(sprite)
-        display_grid(window, MAP)
+        display_grid(window, grid)
         display_units(window, units)
         for event in window.events:
             survol_on, last_node = event_dispatcher(event, window, last_node,
-                                                    units, survol, survol_on)
+                                                    units, survol, survol_on,
+                                                    grid)
         if time.time() - fpstimer >= 1:
             text.string = str(fpscounter) + 'fps'
             fpstimer = time.time()
@@ -376,4 +383,5 @@ def main():
         window.display()
         fpscounter += 1
 
-main()
+if __name__ == '__main__':
+    main()
