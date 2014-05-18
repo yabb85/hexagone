@@ -8,7 +8,7 @@ import Image
 
 
 def generate_table(seed):
-    """docstring for generate_table"""
+    """Generate a new perlin table with random value"""
     random.seed(seed)
     table = []
     value = random.randint(0, 255)
@@ -20,7 +20,7 @@ def generate_table(seed):
 
 
 def duplicate_table(table):
-    """docstring for duplicate_table"""
+    """Duplicate a perlin table."""
     result = []
     for i in range(0, len(table) * 2):
         result[i] = table[i % 255]
@@ -28,7 +28,11 @@ def duplicate_table(table):
 
 
 def check_table(table):
-    """docstring for check_table"""
+    """
+    Return a vlau with error in perlin table
+    Value with error is a value not present in table or
+    a value present everal times
+    """
     dictionary = {}
     for i in range(0, 256):
         dictionary[i] = 0
@@ -150,22 +154,28 @@ def convertToHexa(image, liste):
     """docstring for convertToHexa"""
     pass
 
-width = 800
-height = 600
-harmonique = 6
-base = 5
 
+def main():
+    """docstring for main"""
+    width = 800
+    height = 600
+    harmonique = 6
+    base = 5
 
-table = generate_table(1)
-dictionary = check_table(table)
+    table = generate_table(1)
+    dictionary = check_table(table)
+    print dictionary
 
-result = heightmap(table, width, height, harmonique, base)
+    result = heightmap(table, width, height, harmonique, base)
 
-palette = generate_palette('data/ramp.png')
+    palette = generate_palette('data/ramp.png')
 
-result.save('result.pgm')
+    result.save('result.pgm')
 
-final = result.copy()
-final.putpalette(palette)
-final.show()
-final.save('final.png')
+    final = result.copy()
+    final.putpalette(palette)
+    final.show()
+    final.save('final.png')
+
+if __name__ == '__main__':
+    main()
