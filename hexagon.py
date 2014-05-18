@@ -10,10 +10,11 @@ import sfml as sf
 
 class HexagonLine(sf.TransformableDrawable):
     """
-    Hexagonal geometrical form
+    Hexagonal geometrical form with only border
+    It is not possible to add texture
     """
     def __init__(self, position, radius, color):
-        """docstring for __init__"""
+        """Create hexagon"""
         sf.TransformableDrawable.__init__(self)
         self.points = sf.VertexArray(sf.PrimitiveType.LINES_STRIP, 7)
         self.position = position
