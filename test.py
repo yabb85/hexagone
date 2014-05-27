@@ -10,16 +10,13 @@ from hexagon import Hexagon, HexagonLine
 import time
 from unit import Cavalry
 import operator
+from config import ConfigManager
 
 
-MARGIN = 70
-GRAY_127 = sf.Color(127, 127, 127)
-EAU = sf.Color(150, 196, 217)
 RED = sf.Color(232, 174, 173)
 GREEN = sf.Color(188, 222, 186)
 BORDER = sf.Color(127, 127, 127, 127)
 OVERLOAD = sf.Color(127, 127, 127, 100)
-SIZE = 50
 
 
 class Ground(object):
@@ -150,20 +147,46 @@ class Node(object):
 
 def convert_pixel_to_coord(position):
     """docstring for convert_pixel_to_coord"""
-    hexa = Hexagon((0, 0), SIZE, RED, BORDER)
-    x_coord = (position[0] - MARGIN) / (hexa.get_radius() * 1.5)
-    y_coord = (position[1] - MARGIN + x_coord + hexa.get_apothem()) / \
-        (hexa.get_radius() * 2)
+    config = ConfigManager()
+    hexa = Hexagon((0, 0), int(config.get('hexagon', 'size')),
+                   config.get_color('red'), config.get_color('border'))
+    x_coord = (position[0] - int(config.get('grid', 'margin'))) / \
+        (hexa.get_radius() * 1.5)
+    y_coord = (position[1] - int(config.get('grid', 'margin')) + x_coord +
+               hexa.get_apothem()) / (hexa.get_radius() * 2)
     return (x_coord, y_coord)
 
 
 def convert_coord_to_pixel(coord):
     """docstring for convert_coord_to_pixel"""
-    hexa = Hexagon((0, 0), SIZE, RED, BORDER)
-    y_pos = MARGIN + coord[1] * hexa.get_apothem() * 2 - coord[0] * \
-        hexa.get_apothem()
-    x_pos = MARGIN + coord[0] * hexa.get_radius() * 1.5
+    config = ConfigManager()
+    hexa = Hexagon((0, 0), int(config.get('hexagon', 'size')),
+                   config.get_color('red'), config.get_color('border'))
+    y_pos = int(config.get('grid', 'margin')) + coord[1] * \
+        hexa.get_apothem() * 2 - coord[0] * hexa.get_apothem()
+    x_pos = int(config.get('grid', 'margin')) + coord[0] * \
+        hexa.get_radius() * 1.5
     return (x_pos, y_pos)
+
+
+def display_grid(window, graph):
+    """
+    Display all elements contains in graph (grid on map)
+    :param window:window used to display
+    :param graph:list of all elements to displaying
+    """
+    config = ConfigManager()
+    hexa = HexagonLine((100, 100), int(config.get('hexagon', 'size')),
+                       config.get_color('border'))
+    for node in graph:
+        pos = node.get_position()
+        y_pos = int(config.get('grid', 'margin')) + pos[1] * \
+            hexa.get_apothem() * 2 - pos[0] * hexa.get_apothem()
+        x_pos = int(config.get('grid', 'margin')) + pos[0] * \
+            hexa.get_radius() * 1.5
+        hexa.position = (x_pos, y_pos)
+        hexa.set_color(node.get_color())
+        window.draw(hexa)
 
 
 def display_units(window, units):
@@ -172,7 +195,9 @@ def display_units(window, units):
     :param window:window used to display
     :param units:list of all units
     """
-    hexa = Hexagon((100, 100), SIZE, GRAY_127, BORDER)
+    config = ConfigManager()
+    hexa = Hexagon((100, 100), int(config.get('hexagon', 'size')),
+                   config.get_color('gray_127'), config.get_color('border'))
     texture_mgr = TextureManager()
     for unit in units:
         hexa.set_texture(texture_mgr.get_unit_texture(unit))
@@ -189,23 +214,6 @@ def display_units(window, units):
                 hexa.position = convert_coord_to_pixel(neighbor)
                 hexa.set_color(sf.Color(0, 0, 250, 50))
                 window.draw(hexa)
-
-
-def display_grid(window, graph):
-    """
-    Display all elements contains in graph (grid on map)
-    :param window:window used to display
-    :param graph:list of all elements to displaying
-    """
-    hexa = HexagonLine((100, 100), SIZE, BORDER)
-    for node in graph:
-        pos = node.get_position()
-        y_pos = MARGIN + pos[1] * hexa.get_apothem() * 2 - \
-            pos[0] * hexa.get_apothem()
-        x_pos = MARGIN + pos[0] * hexa.get_radius() * 1.5
-        hexa.position = (x_pos, y_pos)
-        hexa.set_color(node.get_color())
-        window.draw(hexa)
 
 
 def search_node_by_coord_in_list(list_node, coord):
@@ -239,8 +247,10 @@ def generate_grid(height, width):
             base += 1
     return liste
 
+
 def search_node_in_map(event, hexa):
     """docstring for searchNode"""
+    config = ConfigManager()
     neighbors = [
         (+1, +1), (+1, 0), (0, -1),
         (-1, -1), (-1, 0), (0, +1),
@@ -251,9 +261,9 @@ def search_node_in_map(event, hexa):
     coord = (-1, -1)
     # search element in diagonal (search column)
     for i in range(9):
-        y_i = MARGIN + i * hexa.get_apothem() * 2 - \
+        y_i = int(config.get('grid', 'margin')) + i * hexa.get_apothem() * 2 - \
             i * hexa.get_apothem()
-        x_i = MARGIN + i * hexa.get_radius() * 1.5
+        x_i = int(config.get('grid', 'margin')) + i * hexa.get_radius() * 1.5
         dist = math.fabs(event.position.x - x_i)
         if pos == (-1, -1) or dist < old_dist:
             coord = (i, i)
@@ -267,8 +277,8 @@ def search_node_in_map(event, hexa):
     old_dist = -1
     # search the row
     for i in liste:
-        y_pos = (MARGIN + i * hexa.get_apothem() * 2 - coord[0] *
-                 hexa.get_apothem())
+        y_pos = (int(config.get('grid', 'margin')) + i * hexa.get_apothem() *
+                 2 - coord[0] * hexa.get_apothem())
         dist = math.fabs(event.position.y - y_pos)
         if old_dist == -1 or dist < old_dist:
             coord = (coord[0], i)
@@ -278,9 +288,10 @@ def search_node_in_map(event, hexa):
     # improve the position of element selected with their neighbors
     for i in neighbors:
         act_coord = tuple(map(operator.add, coord, i))
-        y_i = MARGIN + act_coord[1] * hexa.get_apothem() * 2 - \
-            act_coord[0] * hexa.get_apothem()
-        x_i = MARGIN + act_coord[0] * hexa.get_radius() * 1.5
+        y_i = int(config.get('grid', 'margin')) + act_coord[1] * \
+            hexa.get_apothem() * 2 - act_coord[0] * hexa.get_apothem()
+        x_i = int(config.get('grid', 'margin')) + act_coord[0] * \
+            hexa.get_radius() * 1.5
         dist = math.sqrt((event.position.x - x_i)**2 +
                          (event.position.y - y_i)**2)
         if old_dist == -1 or dist < old_dist:
@@ -311,7 +322,9 @@ def event_key_dispatcher(event, window, last_node, units):
 
 def event_dispatcher(event, window, last_node, units, survol, survol_on, grid):
     """docstring for event_dispatcher"""
-    hexa = Hexagon((100, 100), SIZE, GRAY_127, BORDER)
+    config = ConfigManager()
+    hexa = Hexagon((100, 100), int(config.get('hexagon', 'size')),
+                   config.get_color('gray_127'), config.get_color('border'))
     if type(event) is sf.CloseEvent:
         window.close()
     if type(event) is sf.ResizeEvent:
@@ -343,17 +356,21 @@ def event_dispatcher(event, window, last_node, units, survol, survol_on, grid):
 
 def main():
     """docstring for main"""
-    width, height = sf.Vector2(800, 600)
+    config = ConfigManager()
+    config.load_config('data/simple.ini')
     settings = sf.window.ContextSettings()
     settings.antialiasing_level = 8
-    window = sf.RenderWindow(sf.VideoMode(width, height), "PySFML test",
+    window = sf.RenderWindow(sf.VideoMode(int(config.get('screen', 'width')),
+                                          int(config.get('screen', 'height'))),
+                             "PySFML test",
                              sf.window.Style.DEFAULT, settings)
 
     grid = generate_grid(6, 10)
     survol_on = False
     last_node = None
     texture_mgr = TextureManager()
-    survol = Hexagon((100, 100), SIZE, OVERLOAD, sf.Color.BLACK)
+    survol = Hexagon((100, 100), int(config.get('hexagon', 'size')),
+                     config.get_color('overload'), sf.Color.BLACK)
     sprite = sf.Sprite(texture_mgr.get_background())
     font = sf.Font.from_file('data/Ubuntu-L.ttf')
     text = sf.Text('test', font, 30)
