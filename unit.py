@@ -5,6 +5,9 @@ Unit present in game
 """
 
 
+import sfml as sf
+
+
 class Unit(object):
     """Abstract class for implementation of unit."""
     def __init__(self):
@@ -14,6 +17,7 @@ class Unit(object):
         self.texture = None
         self.selected = False
         self.position = (0, 0)
+        self.color = sf.Color.BLACK
         self.neighbors = [
             [+1, +1], [+1, 0], [0, -1],
             [-1, -1], [-1, 0], [0, +1]
@@ -46,6 +50,14 @@ class Unit(object):
     def get_neighbors(self):
         """docstring for get_neighbors"""
         return self.neighbors
+
+    def get_color(self):
+        """docstring for get_color"""
+        return self.color
+
+    def set_color(self, color):
+        """docstring for set_color"""
+        self.color = color
 
 
 class Infantry(Unit):
