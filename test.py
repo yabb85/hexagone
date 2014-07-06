@@ -15,9 +15,6 @@ from render import Renderer, Ground
 
 MARGIN = 70
 GRAY_127 = sf.Color(127, 127, 127)
-EAU = sf.Color(150, 196, 217)
-RED = sf.Color(232, 174, 173)
-GREEN = sf.Color(188, 222, 186)
 BORDER = sf.Color(127, 127, 127, 127)
 OVERLOAD = sf.Color(127, 127, 127, 100)
 SIZE = 50
@@ -196,6 +193,7 @@ def main():
     settings.antialiasing_level = 8
     window = sf.RenderWindow(sf.VideoMode(width, height), "PySFML test",
                              sf.window.Style.DEFAULT, settings)
+    # window.framerate_limit = 60
 
     grid = generate_grid(6, 10)
     survol_on = False

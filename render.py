@@ -34,76 +34,61 @@ class Ground(object):
 
 class TextureManager(object):
     """Texture manager."""
-    class InternTextureManager(object):
-        """Intern singleton class for texture manager."""
-        def __init__(self):
-            """docstring for __init__"""
-            self.ground_textures = {
-                Ground.plain: None,
-                Ground.forest: None,
-                Ground.mountain: None,
-                Ground.water: None
-            }
-            self.unit_textures = {
-                "Infantry": None,
-                "Cavalery": None
-            }
-            self.background = None
-            self.load_all_texture()
-
-        def load_all_texture(self):
-            """load all texture used in game"""
-            # self.background = sf.Texture.from_file('data/bois.jpg')
-            self.background = sf.Texture.from_file('final.png')
-            self.ground_textures[Ground.forest] = sf.Texture.from_file(
-                'data/arbre.jpg')
-            self.ground_textures[Ground.water] = sf.Texture.from_file(
-                'data/eau.jpg')
-            self.ground_textures[Ground.mountain] = sf.Texture.from_file(
-                'data/montagne.jpg')
-            self.ground_textures[Ground.plain] = sf.Texture.from_file(
-                'data/paper.jpg')
-            # self.unit_textures["Infantry"] = sf.Texture.from_file()
-            self.unit_textures["Cavalry"] = sf.Texture.from_file(
-                'data/cheval.png')
-
-        def convert_ground_to_texture(self, ground):
-            """Search the texture associate to ground type."""
-            return self.ground_textures[ground]
-
-        def convert_texture_to_ground(self, texture):
-            """docstring for convert_texture_to_ground"""
-            # TODO
-            pass
-
-        def get_unit_texture(self, unit):
-            """Search the texture for each type of unit."""
-            if unit is not None:
-                return self.unit_textures[unit.get_name()]
-            else:
-                return None
-
-        def get_background(self):
-            """Return the texture of background"""
-            return self.background
-
-    __instance = None
-
     def __init__(self):
         """docstring for __init__"""
-        if TextureManager.__instance is None:
-            TextureManager.__instance = TextureManager.InternTextureManager()
+        self.ground_textures = {
+            Ground.plain: None,
+            Ground.forest: None,
+            Ground.mountain: None,
+            Ground.water: None
+        }
+        self.unit_textures = {
+            "Infantry": None,
+            "Cavalery": None
+        }
+        self.background = None
+        self.load_all_texture()
 
-    def __getattr__(self, name):
-        """docstring for __getattr__"""
-        return getattr(self.__instance, name)
+    def load_all_texture(self):
+        """load all texture used in game"""
+        # self.background = sf.Texture.from_file('data/bois.jpg')
+        self.background = sf.Texture.from_file('final.png')
+        self.ground_textures[Ground.forest] = sf.Texture.from_file(
+            'data/arbre.jpg')
+        self.ground_textures[Ground.water] = sf.Texture.from_file(
+            'data/eau.jpg')
+        self.ground_textures[Ground.mountain] = sf.Texture.from_file(
+            'data/montagne.jpg')
+        self.ground_textures[Ground.plain] = sf.Texture.from_file(
+            'data/paper.jpg')
+        # self.unit_textures["Infantry"] = sf.Texture.from_file()
+        self.unit_textures["Cavalry"] = sf.Texture.from_file(
+            'data/cheval.png')
 
-    def __setattr__(self, name):
-        """docstring for __setattr__"""
-        return setattr(self.__instance, name)
+    def convert_ground_to_texture(self, ground):
+        """Search the texture associate to ground type."""
+        return self.ground_textures[ground]
+
+    def convert_texture_to_ground(self, texture):
+        """Search ground type associate to texture."""
+        for key, value in self.ground_textures:
+            if value == texture:
+                return key
+        return None
+
+    def get_unit_texture(self, unit):
+        """Search the texture for each type of unit."""
+        if unit is not None:
+            return self.unit_textures[unit.get_name()]
+        else:
+            return None
+
+    def get_background(self):
+        """Return the texture of background"""
+        return self.background
 
 
-class Renderer:
+class Renderer(object):
     """
     rendering of game
     """
@@ -125,7 +110,6 @@ class Renderer:
     def display_grid(self, graph):
         """
         Display all elements contains in graph (grid on map)
-        :param window:window used to display
         :param graph:list of all elements to displaying
         """
         for node in graph:
@@ -140,8 +124,8 @@ class Renderer:
     def display_units(self, units, color):
         """
         Display all unit on the map
-        :param window:window used to display
         :param units:list of all units
+        :param color:color of unit
         """
         hexa = Hexagon((100, 100), self.size, color, self.grid_color)
         for unit in units:
@@ -170,18 +154,18 @@ class Renderer:
                     self.window.draw(hexa)
 
     def display_fps(self, fps):
-        """docstring for disaply_fps"""
+        """display a number of fps in corner of screen"""
         self.text.string = fps
         self.window.draw(self.text)
 
     def display_background(self):
-        """docstring for dispaly_background"""
+        """display the background of game"""
         self.window.clear(sf.Color(0, 0, 0))
         self.window.draw(self.sprite)
 
 
 def convert_coord_to_pixel(coord, size, color, border, margin):
-    """docstring for convert_coord_to_pixel"""
+    """Convert a coordinate in grid to coordinate on screen"""
     hexa = Hexagon((0, 0), size, color, border)
     y_pos = margin + coord[1] * hexa.get_apothem() * 2 - coord[0] * \
         hexa.get_apothem()
@@ -190,11 +174,9 @@ def convert_coord_to_pixel(coord, size, color, border, margin):
 
 
 def convert_pixel_to_coord(position, size, color, border, margin):
-    """docstring for convert_pixel_to_coord"""
+    """convert a coordinate on screen to coordinate in grid"""
     hexa = Hexagon((0, 0), size, color, border)
     x_coord = (position[0] - margin) / (hexa.get_radius() * 1.5)
     y_coord = (position[1] - margin + x_coord + hexa.get_apothem()) / \
         (hexa.get_radius() * 2)
     return (x_coord, y_coord)
-
-

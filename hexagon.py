@@ -6,9 +6,10 @@ Draw an hexagon
 
 import math
 import sfml as sf
+import geometry
 
 
-class HexagonLine(sf.TransformableDrawable):
+class HexagonLine(sf.TransformableDrawable, geometry.Hexagon):
     """
     Hexagonal geometrical form with only border
     It is not possible to add texture
@@ -16,9 +17,8 @@ class HexagonLine(sf.TransformableDrawable):
     def __init__(self, position, radius, color):
         """Create hexagon"""
         sf.TransformableDrawable.__init__(self)
+        geometry.Hexagon.__init__(self, position, radius)
         self.points = sf.VertexArray(sf.PrimitiveType.LINES_STRIP, 7)
-        self.position = position
-        self.radius = radius
         self.outline_color = color
 
         for i in range(7):
@@ -38,26 +38,17 @@ class HexagonLine(sf.TransformableDrawable):
         for i in range(7):
             self.points[i].color = color
 
-    def get_radius(self):
-        """docstring for get_radius"""
-        return self.radius
 
-    def get_apothem(self):
-        """docstring for get_apothem"""
-        return self.radius * math.sqrt(3) / 2
-
-
-class Hexagon(sf.TransformableDrawable):
+class Hexagon(sf.TransformableDrawable, geometry.Hexagon):
     """
     Hexagonal geometrical form
     """
     def __init__(self, position, radius, color, outline_color):
         """docstring for __init__"""
         sf.TransformableDrawable.__init__(self)
+        geometry.Hexagon.__init__(self, position, radius)
         self.vertices = sf.VertexArray(sf.PrimitiveType.TRIANGLES, 18)
         self.points = sf.VertexArray(sf.PrimitiveType.LINES_STRIP, 7)
-        self.position = position
-        self.radius = radius
         self.outline_color = outline_color
         self.color = color
         self.texture = None
@@ -131,14 +122,6 @@ class Hexagon(sf.TransformableDrawable):
         self.vertices[15].tex_coords = self.points[6].tex_coords
         self.vertices[16].tex_coords = self.points[5].tex_coords
         self.vertices[17].tex_coords = self.points[0].tex_coords
-
-    def get_radius(self):
-        """docstring for get_radius"""
-        return self.radius
-
-    def get_apothem(self):
-        """docstring for get_apothem"""
-        return self.radius * math.sqrt(3) / 2
 
 
 def main():
